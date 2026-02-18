@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# COLORS #
+BLUE="\033[0;34m"
+GREEN="\033[0;32m"
+YELLOW="\033[0;33m"
+RED="\033[0;31m"
+NC="\033[0m"
+
+# FUNCTION #
+uninstall_jccs() {
+    local file="$1"
+
+    if [[ -f "$file" ]]; then
+        if grep -q "\[JCCS\]" "$file"; then
+            sed -i '/\[JCCS\]/d' "$file"
+            echo -e "$GREEN JCCS uninstalled in $file$NC"
+        else
+            echo -e "$YELLOW JCCS not installed in $file$NC"
+        fi
+    else
+        echo -e "$RED $file not found$NC"
+    fi
+}
+
+# SHELL SOURCES #
+BASH="$HOME/.bashrc"
+ZSH="$HOME/.zshrc"
+
+# UNINSTALL #
+uninstall_jccs "$BASH"
+uninstall_jccs "$ZSH"
+
+# END MESSAGE #
+echo -e "\n\t$BLUE[NOTE] uninstall-jccs: you can now open a new shell and use \"JCCS\" wherever you need\n$NC"

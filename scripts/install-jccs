@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# COLORS #
+BLUE="\033[0;34m"
+GREEN="\033[0;32m"
+YELLOW="\033[0;33m"
+RED="\033[0;31m"
+NC="\033[0m"
+
+# JCCS PATH #
+JCCS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+
+# FUNCTION #
+install_jccs() {
+    local file="$1"
+
+    if [[ -f "$file" ]]; then
+        if grep -q "\[JCCS\]" "$file"; then
+            echo -e "$YELLOW JCCS already installed in $file$NC"
+        else
+            echo "export PATH=\"$JCCS_DIR:\$PATH\" #[JCCS] - flag used when uninstalling" >> "$file"
+            echo -e "$GREEN JCCS installed in $file$NC"
+        fi
+    else
+        echo "$RED $file not found$NC"
+    fi
+}
+
+# SHELL SOURCES #
+BASH="$HOME/.bashrc"
+ZSH="$HOME/.zshrc"
+
+# INSTALL #
+install_jccs "$BASH"
+install_jccs "$ZSH"
+
+# END MESSAGE #
+echo -e "\n\t$BLUE[NOTE] install-jccs: you can now open a new shell and use \"JCCS\" wherever you need\n$NC"
