@@ -92,7 +92,7 @@ def check(
                     print(rule_error, file=stderr)
 
             else:
-                print(Text(f"{rule}").bold(), Text("(None)").italic(), Text("[OK]").valid())
+                print(Text(f"{rule}").bold(), Text("(no error)").italic(), Text("[OK]").valid())
 
         except Exception:
             print(Text(f"{rule} [FATAL ERROR]").critic())
