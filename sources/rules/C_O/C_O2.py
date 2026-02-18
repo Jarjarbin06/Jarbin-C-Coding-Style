@@ -9,7 +9,7 @@
 from Error import RuleError
 
 AUTHORIZED_EXTENSIONS = "c h"
-FOLDERS = "SOURCES INCLUDES"
+FOLDERS = "SOURCES INCLUDES TESTS"
 
 def check(
         *args,
@@ -36,12 +36,12 @@ def check(
 
         folder_check : bool = False
 
-        for folder in folders :
-            if folder in file.upper() :
+        for folder in folders.upper().split(" ") :
+            if f"/{folder}/" in file.upper() :
                 folder_check = True
 
         if not folder_check :
-            return False
+            return True
 
         file_ext : str = file.split("/")[-1]
 

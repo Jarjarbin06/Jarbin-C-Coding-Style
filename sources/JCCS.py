@@ -16,14 +16,14 @@ from Error import RuleError
 import jarbin_toolkit_console as Console
 from rules.Rules import RULES
 
-
-# Program #
 print = Console.Console.print
 Text = Console.Text.Text
 
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 84
 
+
+# Program #
 def get_files(
         root: str = "./",
     ) -> list[str]:
@@ -86,7 +86,7 @@ def check(
             if errors:
                 error_count += len(errors)
 
-                print(Text(f"{rule}").bold(), Text(f"({len(errors)})").italic(), ":", Text("[KO]").error())
+                print(Text(f"{rule}").bold(), Text(f"({len(errors)})").italic(), ":", Text("[KO]").error(), end="\n\n")
 
                 for rule_error in errors:
                     print(rule_error, file=stderr)
@@ -97,13 +97,24 @@ def check(
         except Exception:
             print(Text(f"{rule} [FATAL ERROR]").critic())
             print(Text(f"terminating JCCS").error())
-            return 1
+            return -1
 
     return error_count
 
+def set_var(
+        argv : list[str]
+    ) -> None :
+
+    index: int = 0
+    while index < len(argv):
+        index += 1
+
+def print_help(
+    )-> None:
+    print("-h")
+
 
 # Main #
-
 if __name__ == '__main__':
 
     exit_status : int = EXIT_FAILURE
@@ -112,8 +123,12 @@ if __name__ == '__main__':
 
     Console.init()
 
-    if len(argv) > 1 and "-" in argv[1]:
-        exit(exit_status)
+    if len(argv) > 1 and argv[1].startswith("-"):
+        if argv[1] == "-h":
+            print_help()
+            exit(EXIT_SUCCESS)
+
+        set_var(argv[1:])
 
     elif len(argv) == 2:
         root = argv[1]
@@ -125,9 +140,11 @@ if __name__ == '__main__':
 
     Console.quit(delete_log=True)
 
-    if error_amount:
-        print(Text("JCCS").bold(), "finished", Text("[KO]").error(), Text(f"({error_amount} error)").italic(), start="\n")
+    if error_amount > 0:
+        print(Text("JCCS").bold(), "finished", Text("[KO]").error(), Text(f"({error_amount} error)").italic())
+    elif error_amount == 0:
+        print(Text("JCCS").bold(), "finished", Text("[OK]").valid())
     else:
-        print(Text("JCCS").bold(), "finished", Text("[OK]").valid(), start="\n")
+        print(Text("\n") + Text("JCCS").bold().critic() + Text(" terminated").critic(), end="")
 
     exit(exit_status)

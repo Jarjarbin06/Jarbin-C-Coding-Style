@@ -1,1 +1,5 @@
-python sources/JCCS.py "$@"
+#!/bin/bash
+
+JCCS="$( dirname "${BASH_SOURCE[0]}")"
+
+python $JCCS/sources/JCCS.py "$@"
