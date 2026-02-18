@@ -1,1 +1,1 @@
-# Jarbin-C-coding-style
+# JCCS (Jarbin C Coding Style)
