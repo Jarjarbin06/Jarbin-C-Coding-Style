@@ -7,6 +7,13 @@
 #############################
 
 
+# Program info #
+__program__ = "JCCS (Jarbin-C-Coding-Style)"
+__version__ : str = "v0.2"
+__author__ : str = "Jarjarbin06"
+__email__ : str = "nathan.amaraggi@epitech.eu"
+
+
 # Program imports #
 from os import listdir
 from os.path import isfile as path_isfile, join as path_join
@@ -27,15 +34,6 @@ EXIT_FAILURE = 84
 def get_files(
         root: str = "./",
     ) -> list[str]:
-    """
-        Get all files in root directory and subdirectories
-
-        Parameters:
-            root (str): root directory
-
-        Returns:
-            list[str]: all files in root directory and subdirectories
-    """
 
     root = root if root[-1] == "/" else f"{root}/"
     files: list[str] = []
@@ -54,19 +52,9 @@ def get_files(
 
 def check(
         rules: dict[str, dict[str, Callable[[list[str]], None] | dict[str, Any]]],
-        paths: list[str]
+        paths: list[str],
+        silent: bool
     ) -> int:
-
-    """
-        Check all rules for all paths
-
-        Parameters:
-            rules (dict[str, dict[str, Callable[[list[str]], None] | dict[str, Any]]]): rules established by JCCS + your rules (see top of file)
-            paths (list[str]): paths to check
-
-        Returns:
-            int: number of errors found
-    """
 
     errors: list[RuleError] | None
     error_count: int = 0
@@ -86,10 +74,11 @@ def check(
             if errors:
                 error_count += len(errors)
 
-                print(Text(f"{rule}").bold(), Text(f"({len(errors)})").italic(), ":", Text("[KO]").error(), end="\n\n")
+                print(Text(f"{rule}").bold(), Text(f"({len(errors)})").italic(), ":", Text("[KO]").error(), end=("\n" if silent else "\n\n"))
 
-                for rule_error in errors:
-                    print(rule_error, file=stderr)
+                if not silent:
+                    for rule_error in errors:
+                        print(rule_error, file=stderr)
 
             else:
                 print(Text(f"{rule}").bold(), Text("(no error)").italic(), Text("[OK]").valid())
@@ -120,22 +109,40 @@ if __name__ == '__main__':
     exit_status : int = EXIT_FAILURE
     error_amount : int = 0
     root : str = "."
+    arg_silent : bool = False
 
     Console.init()
 
-    if len(argv) > 1 and argv[1].startswith("-"):
-        if argv[1] == "-h":
-            print_help()
-            exit(EXIT_SUCCESS)
+    if len(argv) > 1:
+
+        index: int = 1
+
+        while index < len(argv):
+
+            if argv[index].startswith("-"):
+
+                if argv[index] in ["-h", "--help"]:
+                    print_help()
+                    exit(EXIT_SUCCESS)
+
+                elif argv[index] in ["-s", "--silent"]:
+                    arg_silent = True
+
+                elif argv[index] in ["-v", "--version"]:
+                    print(Text(__program__).bold(), Text(__version__).italic(), Text(f"by {__author__}"))
+                    exit(EXIT_SUCCESS)
+
+                else:
+                    print(Text(f"invalid argument (\"{argv[index]}\" at position {index + 1})").error())
+                    exit(EXIT_FAILURE)
+
+            index += 1
 
         set_var(argv[1:])
 
-    elif len(argv) == 2:
-        root = argv[1]
-
     print(Text("JCCS").bold(), "starting...", end="\n\n")
 
-    error_amount = check(RULES, get_files(root))
+    error_amount = check(RULES, get_files(root), silent=arg_silent)
     exit_status = (EXIT_FAILURE if error_amount else EXIT_SUCCESS)
 
     Console.quit(delete_log=True)
