@@ -116,13 +116,17 @@ JCCS [OPTIONS]
     Define the root directory to analyze.
     Default: current directory (.)
 
+-e, --exclude <path>
+    Define the root directory to analyze.
+    Default: current directory (.)
+
 -R, --rule <rule_name>
     Run only a specific rule.
 
 -R, --rule "[RULE1 RULE2 ...]"
     Run multiple specific rules (space separated inside brackets).
 
--S, --set <RULE> <ARG> <VALUE>
+-S, --set <CATEGORY> <RULE> <ARG> <VALUE>
     Override a rule argument at runtime.
 
 -a, --show-arguments

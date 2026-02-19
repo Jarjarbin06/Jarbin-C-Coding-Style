@@ -78,6 +78,7 @@ def missing_rule(
 
 def get_files(
         root: str = "./",
+        excludes: str = "",
     ) -> list[str]:
 
     files: list[str] = []
@@ -93,7 +94,15 @@ def get_files(
                     files.append(full_path)
 
                 else:
-                    files += get_files(full_path)
+                    do_exclude = False
+
+                    for exclude in excludes.split(" "):
+                        if full_path.split("/")[-1] == exclude:
+                            do_exclude = True
+                            break
+
+                    if not do_exclude:
+                        files += get_files(full_path)
 
     except FileNotFoundError:
         print(Text(f"\"{root}\" does not exist").error(), file=stderr, end="\n\n")
@@ -200,13 +209,16 @@ Options:
         Define the root directory to analyze.
         Default: current directory (.)
 
+    {Text("-e").italic() + Color(Color.C_RESET)}, {Text("--exclude").italic() + Color(Color.C_RESET)} <path>
+        Exclude a path from the root directory (cumulative).
+
     {Text("-R").italic() + Color(Color.C_RESET)}, {Text("--rule").italic() + Color(Color.C_RESET)} <rule_name>
         Run only a specific rule.
 
     {Text("-R").italic() + Color(Color.C_RESET)}, {Text("--rule").italic() + Color(Color.C_RESET)} "[RULE1 RULE2 ...]"
         Run multiple specific rules (space separated inside brackets).
 
-    {Text("-S").italic() + Color(Color.C_RESET)}, {Text("--set").italic() + Color(Color.C_RESET)} <RULE> <ARG> <VALUE>
+    {Text("-S").italic() + Color(Color.C_RESET)}, {Text("--set").italic() + Color(Color.C_RESET)} <CATEGORY> <RULE> <ARG> <VALUE>
         Override a rule argument at runtime.
 
     {Text("-a").italic() + Color(Color.C_RESET)}, {Text("--show-arguments").italic() + Color(Color.C_RESET)}
@@ -242,6 +254,7 @@ if __name__ == '__main__':
     root : str = "."
     arg_silent : int = 0
     arg_verbose : bool = False
+    arg_exclude : str = ""
 
     Console.init(banner=False)
 
@@ -278,6 +291,18 @@ if __name__ == '__main__':
 
                     if (index + 1) < len(argv):
                         root = argv[index + 1]
+                        index += 2
+
+                    else:
+                        print(Text(f"missing argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                        exit(EXIT_FAILURE)
+
+                elif argv[index] in ["-e", "--exclude"]:
+                    if arg_verbose:
+                        print(Text(" ").debug(title=True), Text(f"Flag: -e/--exclude").debug(), Text("(used)").info().italic())
+
+                    if (index + 1) < len(argv):
+                        arg_exclude += f" {argv[index + 1]}" if arg_exclude else argv[index + 1]
                         index += 2
 
                     else:
@@ -405,7 +430,7 @@ Rules selected when calling JCCS
 
     print(Text("JCCS").bold(), "starting...", start="\n", end="\n\n")
 
-    paths = get_files(root)
+    paths = get_files(root, arg_exclude)
 
     if paths:
         error_amount = check(RULES, paths, silent=arg_silent, verbose=arg_verbose)
