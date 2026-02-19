@@ -7,6 +7,7 @@
 #############################
 
 # INFO #
+name = "O4"
 info = """
 C-O4 - Naming files and folders
 The name of the file must define the logical entity it represents, and thus be clear, precise, explicit and
@@ -45,7 +46,7 @@ def check(
     valid_char = kwargs.get("VALID_CHARACTERS", VALID_CHARACTERS)
 
     if verbose:
-        print(Text(" ").debug(title=True), Text("C-04: variables set").debug())
+        print(Text(" ").debug(title=True), Text(f"C-{name}: variables set").debug())
 
     # Custom check #
     def check_file_ext(
@@ -59,28 +60,28 @@ def check(
             file_name = file_name.split(".")[0]
         else :
             if verbose:
-                print(Text(" ").debug(title=True), Text(f"C-04: {file} doesn't have an extension").debug(), Text("(skip)").info().italic())
+                print(Text(" ").debug(title=True), Text(f"C-{name} {file} doesn't have an extension").debug(), Text("(skip)").info().italic())
             return True
 
         if not file_ext in checked_ext.split(" ") :
             if verbose:
-                print(Text(" ").debug(title=True), Text(f"C-04: {file} extension not checked").debug(), Text("(skip)").info().italic())
+                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} extension not checked").debug(), Text("(skip)").info().italic())
             return True
 
         for char in file_name:
             if char not in valid_char:
                 if verbose:
-                    print(Text(" ").debug(title=True), Text(f"C-04: {file} name doesn't only contain allowed letters").debug(), Text("(invalid)").error().italic())
+                    print(Text(" ").debug(title=True), Text(f"C-{name}: {file} name doesn't only contain allowed letters").debug(), Text("(invalid)").error().italic())
 
                 return False
 
         if verbose:
-            print(Text(" ").debug(title=True), Text(f"C-04: {file} name only contain allowed letters").debug(), Text("(valid)").valid().italic())
+            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} name only contain allowed letters").debug(), Text("(valid)").valid().italic())
 
         return True
 
     if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-04: starting check").debug())
+        print(Text(" ").debug(title=True), Text(f"C-{name}: starting check").debug())
 
     # Main loop #
     for file in files_path:
@@ -88,9 +89,9 @@ def check(
             assert check_file_ext(file), f"{file}\nfile doesn't follow the snake_case convention\nfile contain a letter not in [{valid_char.replace("", ", ")[2:-2]}]"
 
         except AssertionError as error:
-            errors.append(RuleError("C-O4", str(error)))
+            errors.append(RuleError(f"C-{name}", str(error)))
 
     if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-04: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())
+        print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())
 
     return errors if errors else None

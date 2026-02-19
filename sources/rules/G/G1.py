@@ -7,9 +7,10 @@
 #############################
 
 # INFO #
+name = "G1"
 info = """
-C-O1 - Contents of the repository
-The repository must not contain compiled (.o, .a, .so, ...), temporary or unnecessary files (*~, #*#, etc.).
+C-G1 - File header
+C files (.c, .h, ...) and every Makefiles must always start with the standard header of the school.
 """
 
 # Imports #
@@ -35,7 +36,7 @@ def check(
     # Custom variables #
 
     if verbose:
-        print(Text(" ").debug(title=True), Text("C-01: variables set").debug())
+        print(Text(" ").debug(title=True), Text(f"C-{name}: variables set").debug())
 
     # Custom check #
     def check_file_ext(
@@ -44,7 +45,7 @@ def check(
 
         if not (file.endswith(".c") or file.endswith(".h") or file.endswith("Makefile")):
             if verbose:
-                print(Text(" ").debug(title=True), Text(f"C-G1: {file} not checked").debug(), Text("(skip)").info().italic())
+                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} not checked").debug(), Text("(skip)").info().italic())
             return True
 
         with open(file, 'r') as f:
@@ -61,15 +62,15 @@ def check(
             "\n##\n" in file_str
         ):
             if verbose:
-                print(Text(" ").debug(title=True), Text(f"C-G1: {file} is missing the epitech file header").debug(), Text("(invalid)").error().italic())
+                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} is missing the epitech file header").debug(), Text("(invalid)").error().italic())
             return False
 
         if verbose:
-            print(Text(" ").debug(title=True), Text(f"C-G1: {file} epitech file header valid").debug(), Text("(valid)").valid().italic())
+            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} epitech file header valid").debug(), Text("(valid)").valid().italic())
         return True
 
     if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-01: starting check").debug())
+        print(Text(" ").debug(title=True), Text(f"C-{name}: starting check").debug())
 
     # Main loop #
     for file in files_path:
@@ -77,9 +78,9 @@ def check(
             assert check_file_ext(file), f"{file}\n doesn't contain the epitech file header\n\n(required for *.c and Makefile)"
 
         except AssertionError as error:
-            errors.append(RuleError("C-O1", str(error)))
+            errors.append(RuleError(f"C-{name}", str(error)))
 
     if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-01: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())
+        print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())
 
     return errors if errors else None

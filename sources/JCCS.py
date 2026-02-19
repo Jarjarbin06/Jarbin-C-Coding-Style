@@ -9,7 +9,7 @@
 
 # Program info #
 __program__ = "JCCS (Jarbin-C-Coding-Style)"
-__version__ : str = "v0.2"
+__version__ : str = "v0.3"
 __author__ : str = "Jarjarbin06"
 __email__ : str = "nathan.amaraggi@epitech.eu"
 
@@ -118,9 +118,10 @@ def check(
         if arg_verbose:
             print(Text(" ").debug(title=True), Text(f"entering category \"{category}\" ({rules[category]["name"]})").debug())
 
-        len_title_line = len(f"┏━ {rules[category]["name"]} [•STARTED•] ━┓")
-        print("┏━", Text(f"{rules[category]["name"]}").bold(), Text("[•STARTED•]").valid(), "━┓")
-        print(Text("┃") + Cursor.move_column(len_title_line - 1) + Text(" ┃"), end="\n")
+        if silent != 2:
+            len_title_line = len(f"┏━ {rules[category]["name"]} [•STARTED•] ━┓")
+            print("┏━", Text(f"{rules[category]["name"]}").bold(), Text("[•STARTED•]").valid(), "━┓")
+            print(Text("┃") + Cursor.move_column(len_title_line - 1) + Text(" ┃"), end="\n")
 
         for rule in rules[category]:
             if rule in ["name", "info"]:
@@ -156,8 +157,9 @@ def check(
                 print(Text("┃"), Text(f"terminating JCCS").error(), file=stderr)
                 return -1
 
-        print(Text("┃") + Cursor.move_column(len_title_line - 1) + Text(" ┃"), end="\n")
-        print("┗━", Text(f"{rules[category]["name"]}").bold(), Text("[••ENDED••]").valid(), "━┛", end="\n\n")
+        if silent != 2:
+            print(Text("┃") + Cursor.move_column(len_title_line - 1) + Text(" ┃"), end="\n")
+            print("┗━", Text(f"{rules[category]["name"]}").bold(), Text("[••ENDED••]").valid(), "━┛", end="\n\n")
 
     return error_count
 
@@ -254,18 +256,21 @@ if __name__ == '__main__':
                     print(Text(" ").debug(title=True), Text(f"Flag: -V/--verbose").debug(), Text("(on)").valid().italic())
 
                     arg_verbose = True
+                    index += 1
 
                 elif argv[index] in ["-s", "--silent"]:
                     if arg_verbose:
                         print(Text(" ").debug(title=True), Text(f"Flag: -s/--silent").debug(), Text("(on)").valid().italic())
 
                     arg_silent = 1
+                    index += 1
 
                 elif argv[index] in ["--super-silent"]:
                     if arg_verbose:
                         print(Text(" ").debug(title=True), Text(f"Flag: --super-silent").debug(), Text("(full)").valid().italic())
 
                     arg_silent = 2
+                    index += 1
 
                 elif argv[index] in ["-r", "--root"]:
                     if arg_verbose:
@@ -273,6 +278,7 @@ if __name__ == '__main__':
 
                     if (index + 1) < len(argv):
                         root = argv[index + 1]
+                        index += 2
 
                     else:
                         print(Text(f"missing argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
@@ -330,6 +336,7 @@ Rules selected when calling JCCS
                                 exit(EXIT_FAILURE)
 
                         RULES = new_rules
+                        index += 2
 
                     else:
                         print(Text(f"missing argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
@@ -339,17 +346,23 @@ Rules selected when calling JCCS
                     if arg_verbose:
                         print(Text(" ").debug(title=True), Text(f"Flag: -S/--set").debug(), Text("(used)").info().italic())
 
-                    if (index + 3) < len(argv):
+                    if (index + 4) < len(argv):
                         if argv[index + 1] in RULES:
-                            if argv[index + 2] in RULES[argv[index + 1]]["arguments"]:
-                                RULES[argv[index + 1]]["arguments"][argv[index + 2]] = argv[index + 3]
+                            if argv[index + 2] in RULES[argv[index + 1]]:
+                                if argv[index + 3] in RULES[argv[index + 1]][argv[index + 2]]["arguments"]:
+                                    RULES[argv[index + 1]][argv[index + 2]]["arguments"][argv[index + 3]] = argv[index + 4]
+                                    index += 5
+
+                                else:
+                                    print(Text(f"{argv[index + 2]} in {argv[index + 1]} doesn't have argument {argv[index + 3]} (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                                    exit(EXIT_FAILURE)
 
                             else:
-                                print(Text(f"{argv[index + 1]} doesn't have argument {argv[index + 2]} (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                                print(Text(f"Rule {argv[index + 2]} doesn't exist in {argv[index + 1]} (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
                                 exit(EXIT_FAILURE)
 
                         else:
-                            print(Text(f"Rule {argv[index + 1]} doesn't exist (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                            print(Text(f"Category {argv[index + 1]} doesn't exist (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
                             exit(EXIT_FAILURE)
 
                     else:
@@ -384,7 +397,9 @@ Rules selected when calling JCCS
                     print(Text(f"invalid argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
                     exit(EXIT_FAILURE)
 
-            index += 1
+            else:
+                print(Text(f"invalid argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                exit(EXIT_FAILURE)
 
         set_var(argv[1:])
 
@@ -400,9 +415,9 @@ Rules selected when calling JCCS
     Console.quit(delete_log=True)
 
     if error_amount > 0:
-        print(Text("JCCS").bold(), "finished", Text("[KO]").error(), Text(f"({error_amount} error)").italic())
+        print(Text("\n") + Text("JCCS").bold(), "finished", Text("[KO]").error(), Text(f"({error_amount} error)").italic())
     elif error_amount == 0:
-        print(Text("JCCS").bold(), "finished", Text("[OK]").valid())
+        print(Text("\n") + Text("JCCS").bold(), "finished", Text("[OK]").valid())
     else:
         print(Text("\n") + Text("JCCS").bold().critic() + Text(" terminated").critic(), end="")
 

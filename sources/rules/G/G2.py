@@ -7,12 +7,10 @@
 #############################
 
 # INFO #
-name = "O3"
+name = "G2"
 info = """
-C-O3 - File coherence
-A source file must match a logical entity, and group all the functions associated with that entity.
-Grouping functions that are not related to each other in the same file has to be avoided.
-You are allowed to have 10 functions (including at most 5 non-static functions) in total per file.
+C-G2 - Separation of functions
+Inside a source file, implementations of functions must be separated by one and only one empty line.
 """
 
 # Imports #
@@ -44,9 +42,23 @@ def check(
     def check_file_ext(
             file : str
         ) -> bool:
-        if verbose:
-            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} cannot be checked on this rule").debug(), Text("(skip)").info().italic())
 
+        if not file.endswith(".c"):
+            if verbose:
+                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} not checked").debug(), Text("(skip)").info().italic())
+            return True
+
+        with open(file, 'r') as f:
+            file_str = f.read()
+        f.close()
+
+        if False:
+            if verbose:
+                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} is missing the epitech file header").debug(), Text("(invalid)").error().italic())
+            return False
+
+        if verbose:
+            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} epitech file header valid").debug(), Text("(valid)").valid().italic())
         return True
 
     if verbose:
@@ -55,7 +67,7 @@ def check(
     # Main loop #
     for file in files_path:
         try :
-            assert check_file_ext(file), f"{file}\nfile isn't coherent"
+            assert check_file_ext(file), f"{file}\n functions must be deparated by one and only one empty line"
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error)))

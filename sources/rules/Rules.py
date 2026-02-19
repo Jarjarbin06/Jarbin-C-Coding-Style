@@ -18,7 +18,7 @@ RULES: dict = {}
 ## C-F - Functions ##
 
 ## C-G - Global Scope ##
-from rules.G import G1
+from rules.G import G1, G2
 
 RULES["G"] = {
     "name": "C-G — Global Scope",
@@ -39,6 +39,14 @@ RULES["G"]["C-G1"] = {
     "arguments": {
     }
 }
+
+RULES["G"]["C-G2"] = {
+    "info": G2.info,
+    "check": G2.check,
+    "arguments": {
+    }
+}
+
 ## C-H - Header Files ##
 
 ## C-L - Layout Inside A Function Scope ##
