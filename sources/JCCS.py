@@ -103,7 +103,7 @@ def get_files(
 def check(
         rules: dict[str, dict[str, Callable[[list[str]], None] | dict[str, Any]]],
         paths: list[str],
-        silent: bool,
+        silent: int,
         verbose: bool
     ) -> int:
 
@@ -282,26 +282,54 @@ if __name__ == '__main__':
                     if arg_verbose:
                         print(Text(" ").debug(title=True), Text(f"Flag: -R/--rule").debug(), Text("(used)").info().italic())
 
+                    new_rules = {}
+
                     if (index + 1) < len(argv):
                         if argv[index + 1].startswith("[") and argv[index + 1].endswith("]"):
-                            new_rules = {}
-                            for arg in argv[index + 1][1:-1].split(" "):
-                                if arg in RULES:
-                                    new_rules[arg] = RULES[arg]
+                            new_rules = {
+                                "CUSTOM": {
+                                    "name": "Custom Rule Selection",
+                                    "info": """
+Rules selected when calling JCCS
+"""
+                                }
+                            }
 
-                                else:
+                            for arg in argv[index + 1][1:-1].split(" "):
+                                rule_exist = False
+
+                                for category in RULES:
+                                    if arg in RULES[category]:
+                                        new_rules["CUSTOM"][arg] = RULES[category][arg]
+                                        rule_exist = True
+                                        break
+
+                                if not rule_exist:
                                     print(Text(f"Rule {arg} doesn't exist (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
                                     exit(EXIT_FAILURE)
 
-                            RULES = new_rules
-
                         else:
-                            if argv[index + 1] in RULES:
-                                RULES = {argv[index + 1]: RULES[argv[index + 1]]}
+                            rule_exist = False
 
-                            else:
+                            for category in RULES:
+                                if argv[index + 1] in RULES[category]:
+                                    new_rules = {
+                                        "CUSTOM": {
+                                            "name": "Custom Rule Selection",
+                                            "info": """
+                                    Rules selected when calling JCCS
+                                    """,
+                                            argv[index + 1]: RULES[category][argv[index + 1]]
+                                        }
+                                    }
+                                    rule_exist = True
+                                    break
+
+                            if not rule_exist:
                                 print(Text(f"Rule {argv[index + 1]} doesn't exist (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
                                 exit(EXIT_FAILURE)
+
+                        RULES = new_rules
 
                     else:
                         print(Text(f"missing argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
