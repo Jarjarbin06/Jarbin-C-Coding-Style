@@ -35,7 +35,7 @@ def get_files(
         root: str = "./",
     ) -> list[str]:
 
-    root = root if root[-1] == "/" else f"{root}/"
+    root = (root if root[-1] == "/" else f"{root}/") if root else "./"
     files: list[str] = []
 
     for entry in listdir(root):
@@ -53,7 +53,8 @@ def get_files(
 def check(
         rules: dict[str, dict[str, Callable[[list[str]], None] | dict[str, Any]]],
         paths: list[str],
-        silent: bool
+        silent: bool,
+        verbose: bool
     ) -> int:
 
     errors: list[RuleError] | None
@@ -69,7 +70,9 @@ def check(
             for arg in rules[rule]["arguments"]:
                 keywords_args[arg] = rules[rule]["arguments"][arg]
 
-            errors = rules[rule]["check"](args, keywords_args)
+            keywords_args["verbose"] = verbose
+
+            errors = rules[rule]["check"](args, kwargs=keywords_args)
 
             if errors:
                 error_count += len(errors)
@@ -84,8 +87,8 @@ def check(
                 print(Text(f"{rule}").bold(), Text("(no error)").italic(), Text("[OK]").valid())
 
         except Exception:
-            print(Text(f"{rule} [FATAL ERROR]").critic())
-            print(Text(f"terminating JCCS").error())
+            print(Text(f"{rule} [FATAL ERROR]").critic(), file=stderr)
+            print(Text(f"terminating JCCS").error(), file=stderr)
             return -1
 
     return error_count
@@ -110,8 +113,9 @@ if __name__ == '__main__':
     error_amount : int = 0
     root : str = "."
     arg_silent : bool = False
+    arg_verbose : bool = False
 
-    Console.init()
+    Console.init(banner=False)
 
     if len(argv) > 1:
 
@@ -125,15 +129,26 @@ if __name__ == '__main__':
                     print_help()
                     exit(EXIT_SUCCESS)
 
-                elif argv[index] in ["-s", "--silent"]:
-                    arg_silent = True
-
                 elif argv[index] in ["-v", "--version"]:
                     print(Text(__program__).bold(), Text(__version__).italic(), Text(f"by {__author__}"))
                     exit(EXIT_SUCCESS)
 
+                elif argv[index] in ["-R", "--root"]:
+                    if (index + 1) < len(argv):
+                        root = argv[index + 1]
+
+                    else:
+                        print(Text(f"missing argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                        exit(EXIT_FAILURE)
+
+                elif argv[index] in ["-s", "--silent"]:
+                    arg_silent = True
+
+                elif argv[index] in ["-V", "--verbose"]:
+                    arg_verbose = True
+
                 else:
-                    print(Text(f"invalid argument (\"{argv[index]}\" at position {index + 1})").error())
+                    print(Text(f"invalid argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
                     exit(EXIT_FAILURE)
 
             index += 1
@@ -142,7 +157,7 @@ if __name__ == '__main__':
 
     print(Text("JCCS").bold(), "starting...", end="\n\n")
 
-    error_amount = check(RULES, get_files(root), silent=arg_silent)
+    error_amount = check(RULES, get_files(root), silent=arg_silent, verbose=arg_verbose)
     exit_status = (EXIT_FAILURE if error_amount else EXIT_SUCCESS)
 
     Console.quit(delete_log=True)
