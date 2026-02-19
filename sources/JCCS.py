@@ -166,7 +166,7 @@ Options:
         Display this help message and exit.
 
     {Text("-v").italic() + Color(Color.C_RESET)}, {Text("--version").italic() + Color(Color.C_RESET)}
-        Show program name, version and author.
+        Show program name, version and author and exit.
 
     {Text("-r").italic() + Color(Color.C_RESET)}, {Text("--root").italic() + Color(Color.C_RESET)} <path>
         Define the root directory to analyze.
@@ -180,7 +180,7 @@ Options:
 
     {Text("-a").italic() + Color(Color.C_RESET)}, {Text("--show-arguments").italic() + Color(Color.C_RESET)}
         Display all available rules with their descriptions
-        and configurable arguments.
+        and configurable arguments and exit.
     
     {Text("-s").italic() + Color(Color.C_RESET)}, {Text("--silent").italic() + Color(Color.C_RESET)}
         Display only rule summaries (hide detailed error output).
@@ -189,9 +189,9 @@ Options:
         Enable verbose mode for rules that support it.
 
 Exit codes:
-    0   Success (no style errors found)
-    84  Failure (style errors detected or invalid usage)
-    -1   Fatal internal error during rule execution
+    0       Success (no style errors found)
+    84      Failure (style errors detected or invalid usage)
+    -1      Fatal internal error during rule execution
 
 Behavior:
     • Recursively scans non-hidden files from the root directory.
