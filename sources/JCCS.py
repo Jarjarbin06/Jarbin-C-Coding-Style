@@ -322,7 +322,7 @@ if __name__ == '__main__':
 
         set_var(argv[1:])
 
-    print(Text("JCCS").bold(), "starting...", end="\n\n")
+    print(Text("JCCS").bold(), "starting...", start="\n", end="\n\n")
 
     paths = get_files(root)
 
