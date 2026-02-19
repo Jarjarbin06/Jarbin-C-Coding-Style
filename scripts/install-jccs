@@ -35,4 +35,4 @@ install_jccs "$BASH"
 install_jccs "$ZSH"
 
 # END MESSAGE #
-echo -e "\n\t$BLUE[NOTE] install-jccs: you can now open a new shell and use \"JCCS\" wherever you need\n$NC"
+echo -e "\n\t$BLUE[NOTE] install-jccs: you can now open a new shell for the changes to take effect and use \"JCCS\" wherever you need\n$NC"

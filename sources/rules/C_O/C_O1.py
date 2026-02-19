@@ -6,6 +6,12 @@
 ### by JARJARBIN's STUDIO ###
 #############################
 
+# INFO #
+info = """
+C-O1 - Contents of the repository
+The repository must not contain compiled (.o, .a, .so, ...), temporary or unnecessary files (*~, #*#, etc.).
+"""
+
 # Imports #
 from Error import RuleError
 import jarbin_toolkit_console as Console
@@ -17,6 +23,7 @@ Text = Console.Text.Text
 UNAUTHORIZED_EXTENSIONS = "o a so out gcda gcno gch pch swp swo tmp bak"
 EXCLUDED_FOLDERS = "bonus"
 
+# Checker #
 def check(
         *args,
         **kwargs
@@ -25,11 +32,11 @@ def check(
     kwargs = kwargs["kwargs"]
     errors = []
     files_path : list[str] = args[0]
-    verbose: bool = kwargs.get("verbose", False)
+    verbose = kwargs.get("verbose", False)
 
     # Custom variables #
-    unauth_ext : str = kwargs.get("UNAUTHORIZED_EXTENSIONS", UNAUTHORIZED_EXTENSIONS)
-    excluded_folders : str = kwargs.get("EXCLUDED_FOLDERS", EXCLUDED_FOLDERS)
+    unauth_ext = kwargs.get("UNAUTHORIZED_EXTENSIONS", UNAUTHORIZED_EXTENSIONS)
+    excluded_folders = kwargs.get("EXCLUDED_FOLDERS", EXCLUDED_FOLDERS)
 
     if verbose:
         print(Text(" ").debug(title=True), Text("C-01: variables set").debug())
@@ -40,7 +47,7 @@ def check(
         ) -> bool:
 
         for folder in excluded_folders.split(" ") :
-            if f"/{folder.upper()}/" in file.upper() :
+            if f"/{folder.upper()}/" in file.upper() or f"{folder.upper()}/" in file.upper() :
                 if verbose:
                     print(Text(" ").debug(title=True), Text(f"C-01: {file} in EXCLUDED_FOLDERS (\"{folder}\")").debug(), Text("(skip)").info().italic())
                 return True
@@ -68,7 +75,7 @@ def check(
     # Main loop #
     for file in files_path:
         try :
-            assert check_file_ext(file), f"{file}\ninvalid extension (compiled, temporary or unnecessary file)\n\n(.{file.split("/")[-1].split(".")[-1]} is in [.{UNAUTHORIZED_EXTENSIONS.replace(" ", ", .")}])"
+            assert check_file_ext(file), f"{file}\ninvalid extension (compiled, temporary or unnecessary file)\n\n(.{file.split("/")[-1].split(".")[-1]} is in [.{unauth_ext.replace(" ", ", .")}])"
 
         except AssertionError as error:
             errors.append(RuleError("C-O1", str(error)))

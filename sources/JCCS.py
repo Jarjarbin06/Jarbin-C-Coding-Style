@@ -32,6 +32,36 @@ EXIT_FAILURE = 84
 
 
 # Program #
+def show_arguments(
+        rules: dict[str, dict[str, Callable[[list[str]], None] | dict[str, Any]]]
+    ) -> None:
+
+    title = "   JCCS - RULES   "
+    dash_title = "-" * (len(Console.Console) - len(title))
+    dash = "-" * len(Console.Console)
+    print(dash)
+    print(dash_title[:int((len(Console.Console) - len(title)) / 2)] + title + dash_title[:int((len(Console.Console) - len(title)) / 2)])
+    print(dash)
+
+    last_rule = [rule for rule in rules][-1]
+
+    for rule in rules:
+        print(Text(rule).bold().underline())
+        print(Color(Color.C_FG_DARK) + Text(rules[rule]["info"]), end="")
+        print(Text("Arguments:"))
+        if rules[rule]["arguments"] :
+            for rule_arg in rules[rule]["arguments"]:
+                print("  - " + rule_arg + " : \"" + rules[rule]["arguments"][rule_arg] + "\"")
+
+        else:
+            print(Text("\t(no argument)").italic())
+
+        if rule != last_rule:
+            print("-" * len(Console.Console))
+
+    print(dash)
+    print(dash)
+
 def missing_rule(
         *args,
         **kwargs
@@ -115,8 +145,7 @@ def set_var(
 
 def print_help(
     )-> None:
-    print(
-f"""{Text(__program__).bold().underline() + Color(Color.C_RESET)}
+    print(f"""{Text(__program__).bold().underline() + Color(Color.C_RESET)}
 
 C coding style checker for Epitech projects.
 
@@ -130,7 +159,7 @@ Description:
     individually or collectively.
 
 Usage:
-    python jccs.py [OPTIONS]
+    JCCS [OPTIONS]
 
 Options:
     {Text("-h").italic() + Color(Color.C_RESET)}, {Text("--help").italic() + Color(Color.C_RESET)}
@@ -149,6 +178,10 @@ Options:
     {Text("-R").italic() + Color(Color.C_RESET)}, {Text("--rule").italic() + Color(Color.C_RESET)} "[RULE1 RULE2 ...]"
         Run multiple specific rules (space separated inside brackets).
 
+    {Text("-a").italic() + Color(Color.C_RESET)}, {Text("--show-arguments").italic() + Color(Color.C_RESET)}
+        Display all available rules with their descriptions
+        and configurable arguments.
+    
     {Text("-s").italic() + Color(Color.C_RESET)}, {Text("--silent").italic() + Color(Color.C_RESET)}
         Display only rule summaries (hide detailed error output).
 
@@ -158,13 +191,13 @@ Options:
 Exit codes:
     0   Success (no style errors found)
     84  Failure (style errors detected or invalid usage)
+    -1   Fatal internal error during rule execution
 
 Behavior:
     • Recursively scans non-hidden files from the root directory.
     • Applies selected coding style rules.
-    • Displays formatted results per rule.
-    • Returns the number of detected errors via exit status."""
-    )
+    • Allows runtime rule filtering and argument configuration.
+    • Displays formatted rule results (OK/KO).""")
 
 
 # Main #
@@ -185,16 +218,21 @@ if __name__ == '__main__':
         while index < len(argv):
 
             if argv[index].startswith("-"):
+                if argv[index] in ["-V", "--verbose"]:
+                    print(Text(" ").debug(title=True), Text(f"Flag: -V/--verbose").debug(), Text("(on)").valid().italic())
 
-                if argv[index] in ["-h", "--help"]:
-                    print_help()
-                    exit(EXIT_SUCCESS)
+                    arg_verbose = True
 
-                elif argv[index] in ["-v", "--version"]:
-                    print(Text(__program__).bold(), Text(__version__).italic(), Text(f"by {__author__}"))
-                    exit(EXIT_SUCCESS)
+                elif argv[index] in ["-s", "--silent"]:
+                    if arg_verbose:
+                        print(Text(" ").debug(title=True), Text(f"Flag: -V/--verbose").debug(), Text("(on)").valid().italic())
+
+                    arg_silent = True
 
                 elif argv[index] in ["-r", "--root"]:
+                    if arg_verbose:
+                        print(Text(" ").debug(title=True), Text(f"Flag: -r/--root").debug(), Text("(used)").info().italic())
+
                     if (index + 1) < len(argv):
                         root = argv[index + 1]
 
@@ -203,6 +241,9 @@ if __name__ == '__main__':
                         exit(EXIT_FAILURE)
 
                 elif argv[index] in ["-R", "--rule"]:
+                    if arg_verbose:
+                        print(Text(" ").debug(title=True), Text(f"Flag: -R/--rule").debug(), Text("(used)").info().italic())
+
                     if (index + 1) < len(argv):
                         if argv[index + 1].startswith("[") and argv[index + 1].endswith("]"):
                             new_rules = {}
@@ -211,7 +252,8 @@ if __name__ == '__main__':
                                     new_rules[arg] = RULES[arg]
 
                                 else:
-                                    new_rules[arg] = {"check": missing_rule, "arguments": {}}
+                                    print(Text(f"Rule {arg} doesn't exist (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                                    exit(EXIT_FAILURE)
 
                             RULES = new_rules
 
@@ -220,19 +262,59 @@ if __name__ == '__main__':
                                 RULES = {argv[index + 1]: RULES[argv[index + 1]]}
 
                             else:
-                                RULES = {argv[index + 1]: {"check": missing_rule, "arguments": {}}}
+                                print(Text(f"Rule {argv[index + 1]} doesn't exist (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                                exit(EXIT_FAILURE)
 
                     else:
                         print(Text(f"missing argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
                         exit(EXIT_FAILURE)
 
-                elif argv[index] in ["-s", "--silent"]:
-                    arg_silent = True
+                elif argv[index] in ["-S", "--set"]:
+                    if arg_verbose:
+                        print(Text(" ").debug(title=True), Text(f"Flag: -S/--set").debug(), Text("(used)").info().italic())
 
-                elif argv[index] in ["-V", "--verbose"]:
-                    arg_verbose = True
+                    if (index + 3) < len(argv):
+                        if argv[index + 1] in RULES:
+                            if argv[index + 2] in RULES[argv[index + 1]]["arguments"]:
+                                RULES[argv[index + 1]]["arguments"][argv[index + 2]] = argv[index + 3]
+
+                            else:
+                                print(Text(f"{argv[index + 1]} doesn't have argument {argv[index + 2]} (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                                exit(EXIT_FAILURE)
+
+                        else:
+                            print(Text(f"Rule {argv[index + 1]} doesn't exist (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                            exit(EXIT_FAILURE)
+
+                    else:
+                        print(Text(f"missing argument(s) (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                        exit(EXIT_FAILURE)
+
+                elif argv[index] in ["-h", "--help"]:
+                    if arg_verbose:
+                        print(Text(" ").debug(title=True), Text(f"Flag: -h/--help").debug(), Text("(used)").info().italic())
+
+                    print_help()
+                    exit(EXIT_SUCCESS)
+
+                elif argv[index] in ["-v", "--version"]:
+                    if arg_verbose:
+                        print(Text(" ").debug(title=True), Text(f"Flag: -v/--version").debug(), Text("(used)").info().italic())
+
+                    print(Text(__program__).bold(), Text(__version__).italic(), Text(f"by {__author__}"))
+                    exit(EXIT_SUCCESS)
+
+                elif argv[index] in ["-a", "--show-arguments"]:
+                    if arg_verbose:
+                        print(Text(" ").debug(title=True), Text(f"Flag: -a/--show-arguments").debug(), Text("(used)").info().italic())
+
+                    show_arguments(RULES)
+                    exit(EXIT_SUCCESS)
 
                 else:
+                    if arg_verbose:
+                        print(Text(" ").debug(title=True), Text(f"Flag: invalid").debug(), Text("(error)").error().italic())
+
                     print(Text(f"invalid argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
                     exit(EXIT_FAILURE)
 

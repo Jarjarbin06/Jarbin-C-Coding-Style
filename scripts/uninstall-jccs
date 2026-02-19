@@ -32,4 +32,4 @@ uninstall_jccs "$BASH"
 uninstall_jccs "$ZSH"
 
 # END MESSAGE #
-echo -e "\n\t$BLUE[NOTE] uninstall-jccs: you can now open a new shell and use \"JCCS\" wherever you need\n$NC"
+echo -e "\n\t$BLUE[NOTE] uninstall-jccs: you can now open a new shell for the changes to take effect\n$NC"

@@ -6,6 +6,12 @@
 ### by JARJARBIN's STUDIO ###
 #############################
 
+# INFO #
+info = """
+C-O2 - File extension
+Sources in a C program must only have .c or .h extensions
+"""
+
 # Imports #
 from Error import RuleError
 import jarbin_toolkit_console as Console
@@ -15,8 +21,9 @@ Text = Console.Text.Text
 
 # Custom Variables #
 AUTHORIZED_EXTENSIONS = "c h"
-INCLUDED_FOLDERS = "SOURCES INCLUDES TESTS"
+INCLUDED_FOLDERS = "sources includes tests"
 
+# Checker #
 def check(
         *args,
         **kwargs
@@ -25,11 +32,11 @@ def check(
     kwargs = kwargs["kwargs"]
     errors = []
     files_path : list[str] = args[0]
-    verbose: bool = kwargs.get("verbose", False)
+    verbose = kwargs.get("verbose", False)
 
     # Custom variables #
-    auth_ext : str = kwargs.get("AUTHORIZED_EXTENSIONS", AUTHORIZED_EXTENSIONS)
-    included_folders : str = kwargs.get("INCLUDED_FOLDERS", INCLUDED_FOLDERS)
+    auth_ext = kwargs.get("AUTHORIZED_EXTENSIONS", AUTHORIZED_EXTENSIONS)
+    included_folders = kwargs.get("INCLUDED_FOLDERS", INCLUDED_FOLDERS)
 
     if verbose:
         print(Text(" ").debug(title=True), Text("C-02: variables set").debug())
@@ -74,7 +81,7 @@ def check(
     # Main loop #
     for file in files_path:
         try :
-            assert check_file_ext(file), f"{file}\ninvalid extension\n\n(.{file.split("/")[-1].split(".")[-1]} is not in [.{AUTHORIZED_EXTENSIONS.replace(" ", ", .")}])"
+            assert check_file_ext(file), f"{file}\ninvalid extension\n\n(.{file.split("/")[-1].split(".")[-1]} is not in [.{auth_ext.replace(" ", ", .")}])"
 
         except AssertionError as error:
             errors.append(RuleError("C-O2", str(error)))
