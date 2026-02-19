@@ -26,6 +26,7 @@ from rules.Rules import RULES
 print = Console.Console.print
 Text = Console.Text.Text
 Color = Console.ANSI.Color
+Cursor = Console.ANSI.Cursor
 
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 84
@@ -45,19 +46,26 @@ def show_arguments(
 
     last_rule = [rule for rule in rules][-1]
 
-    for rule in rules:
-        print(Text(rule).bold().underline())
-        print(Color(Color.C_FG_DARK) + Text(rules[rule]["info"]), end="")
-        print(Text("Arguments:"))
-        if rules[rule]["arguments"] :
-            for rule_arg in rules[rule]["arguments"]:
-                print("  - " + rule_arg + " : \"" + rules[rule]["arguments"][rule_arg] + "\"")
+    for category in rules:
 
-        else:
-            print(Text("\t(no argument)").italic())
+        print(Color(Color.C_BOLD) + dash_title[:int((len(Console.Console) - len(rules[category]["name"]) + 6) / 4)].replace("-", "=") + "   " + rules[category]["name"] + "   " + dash_title[:int((len(Console.Console) - len(rules[category]["name"]) + 6) / 4)].replace("-", "="))
+        print(Color(Color.C_FG_DARK) + Text(rules[category]["info"]))
 
-        if rule != last_rule:
-            print("-" * len(Console.Console))
+        for rule in rules[category]:
+            if rule in ["name", "info"]:
+                continue
+            print(Text(rule).bold().underline())
+            print(Color(Color.C_FG_DARK) + Text(rules[category][rule]["info"]), end="")
+            print(Text("Arguments:"))
+            if rules[category][rule]["arguments"] :
+                for rule_arg in rules[category][rule]["arguments"]:
+                    print("  - " + rule_arg + " : \"" + rules[category][rule]["arguments"][rule_arg] + "\"")
+
+            else:
+                print(Text("\t(no argument)").italic())
+
+            if rule != last_rule:
+                print("-" * len(Console.Console))
 
     print(dash)
     print(dash)
@@ -103,35 +111,53 @@ def check(
     error_count: int = 0
     args : list = paths
     keywords_args: dict
+    len_title_line: int
 
-    for rule in rules:
+    for category in rules:
 
-        try:
-            keywords_args = {}
+        if arg_verbose:
+            print(Text(" ").debug(title=True), Text(f"entering category \"{category}\" ({rules[category]["name"]})").debug())
 
-            for arg in rules[rule]["arguments"]:
-                keywords_args[arg] = rules[rule]["arguments"][arg]
+        len_title_line = len(f"┏━ {rules[category]["name"]} [•STARTED•] ━┓")
+        print("┏━", Text(f"{rules[category]["name"]}").bold(), Text("[•STARTED•]").valid(), "━┓")
+        print(Text("┃") + Cursor.move_column(len_title_line - 1) + Text(" ┃"), end="\n")
 
-            keywords_args["verbose"] = verbose
+        for rule in rules[category]:
+            if rule in ["name", "info"]:
+                continue
 
-            errors = rules[rule]["check"](args, kwargs=keywords_args)
+            try:
+                keywords_args = {}
 
-            if errors:
-                error_count += len(errors)
+                for arg in rules[category][rule]["arguments"]:
+                    keywords_args[arg] = rules[category][rule]["arguments"][arg]
 
-                print(Text(f"{rule}").bold(), Text(f"({len(errors)})").italic(), ":", Text("[KO]").error(), end=("\n" if silent else "\n\n"))
+                keywords_args["verbose"] = verbose
 
-                if not silent:
-                    for rule_error in errors:
-                        print(rule_error, file=stderr)
+                errors = rules[category][rule]["check"](args, kwargs=keywords_args)
 
-            else:
-                print(Text(f"{rule}").bold(), Text("(no error)").italic(), Text("[OK]").valid())
+                if errors:
+                    error_count += len(errors)
 
-        except AssertionError:#Exception:
-            print(Text(f"{rule} [FATAL ERROR]").critic(), file=stderr)
-            print(Text(f"terminating JCCS").error(), file=stderr)
-            return -1
+                    if silent != 2:
+                        print(Text("┃"), Text(f"{rule}").bold(), Text(f"({len(errors)})").italic(), end="")
+                        print(Cursor.move_column(len_title_line - 6) + Text("[KO]").error(), Text(" ┃"), end=("\n" if silent else "\n┃\n"))
+
+                    if not silent:
+                        for rule_error in errors:
+                            print("┃ " + str(rule_error).replace("\n", str(Color(Color.C_RESET) + "\n┃ ")), end="┃\n", file=stderr)
+
+                elif silent != 2:
+                    print(Text("┃"), Text(f"{rule}").bold(), Text("(no error)").italic(), end="")
+                    print(Cursor.move_column(len_title_line - 6) + Text("[OK]").valid(), Text(" ┃"), end=("\n" if silent else "\n"))
+
+            except AssertionError:#Exception:
+                print(Text("┃"), Text(f"{rule} [FATAL ERROR]").critic(), file=stderr)
+                print(Text("┃"), Text(f"terminating JCCS").error(), file=stderr)
+                return -1
+
+        print(Text("┃") + Cursor.move_column(len_title_line - 1) + Text(" ┃"), end="\n")
+        print("┗━", Text(f"{rules[category]["name"]}").bold(), Text("[••ENDED••]").valid(), "━┛", end="\n\n")
 
     return error_count
 
@@ -178,12 +204,18 @@ Options:
     {Text("-R").italic() + Color(Color.C_RESET)}, {Text("--rule").italic() + Color(Color.C_RESET)} "[RULE1 RULE2 ...]"
         Run multiple specific rules (space separated inside brackets).
 
+    {Text("-S").italic() + Color(Color.C_RESET)}, {Text("--set").italic() + Color(Color.C_RESET)} <RULE> <ARG> <VALUE>
+        Override a rule argument at runtime.
+
     {Text("-a").italic() + Color(Color.C_RESET)}, {Text("--show-arguments").italic() + Color(Color.C_RESET)}
         Display all available rules with their descriptions
         and configurable arguments and exit.
     
     {Text("-s").italic() + Color(Color.C_RESET)}, {Text("--silent").italic() + Color(Color.C_RESET)}
         Display only rule summaries (hide detailed error output).
+
+    {Text("--super-silent").italic() + Color(Color.C_RESET)}
+        Display only JCCS result (hide detailed error output and summaries).
 
     {Text("-V").italic() + Color(Color.C_RESET)}, {Text("--verbose").italic() + Color(Color.C_RESET)}
         Enable verbose mode for rules that support it.
@@ -206,7 +238,7 @@ if __name__ == '__main__':
     exit_status : int = EXIT_FAILURE
     error_amount : int = 0
     root : str = "."
-    arg_silent : bool = False
+    arg_silent : int = 0
     arg_verbose : bool = False
 
     Console.init(banner=False)
@@ -225,9 +257,15 @@ if __name__ == '__main__':
 
                 elif argv[index] in ["-s", "--silent"]:
                     if arg_verbose:
-                        print(Text(" ").debug(title=True), Text(f"Flag: -V/--verbose").debug(), Text("(on)").valid().italic())
+                        print(Text(" ").debug(title=True), Text(f"Flag: -s/--silent").debug(), Text("(on)").valid().italic())
 
-                    arg_silent = True
+                    arg_silent = 1
+
+                elif argv[index] in ["--super-silent"]:
+                    if arg_verbose:
+                        print(Text(" ").debug(title=True), Text(f"Flag: --super-silent").debug(), Text("(full)").valid().italic())
+
+                    arg_silent = 2
 
                 elif argv[index] in ["-r", "--root"]:
                     if arg_verbose:

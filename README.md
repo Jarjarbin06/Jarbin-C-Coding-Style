@@ -129,7 +129,10 @@ JCCS [OPTIONS]
     Display all available rules and their configurable arguments and exit.
 
 -s, --silent
-    Display only rule summaries (hide detailed error output).
+    Display only JCCS result and rule summaries (hide detailed error output).
+
+--super-silent
+    Display only JCCS result (hide detailed error output and summaries).
 
 -V, --verbose
     Enable verbose mode for supported rules.

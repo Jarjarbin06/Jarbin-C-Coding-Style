@@ -42,7 +42,7 @@ def check(
             file : str
         ) -> bool:
 
-        if not (file.endswith(".c") or file.endswith("Makefile")):
+        if not (file.endswith(".c") or file.endswith(".h") or file.endswith("Makefile")):
             if verbose:
                 print(Text(" ").debug(title=True), Text(f"C-G1: {file} not checked").debug(), Text("(skip)").info().italic())
             return True
@@ -51,7 +51,7 @@ def check(
             file_str = f.read()
         f.close()
 
-        if file.endswith(".c") and not (
+        if (file.endswith(".c") or file.endswith(".h")) and not (
             "/*\n** EPITECH PROJECT, " in file_str and
             "\n** File description:" in file_str and
             "\n*/\n" in file_str
