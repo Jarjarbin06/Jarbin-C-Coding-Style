@@ -126,10 +126,10 @@ def check(
         rules: dict[str, dict[str, Callable[[list[str]], None] | dict[str, Any]]],
         paths: list[str],
         silent: int,
-        verbose: bool
+        verbose: int
     ) -> int:
 
-    errors: list[RuleError] | None
+    errors: list[RuleError] | None = None
     category_error_count: int = 0
     error_count: int = 0
     args : list = paths
@@ -188,6 +188,9 @@ def check(
             print("┗━", Text(f"{rules[category]["name"]}").bold(), (Text("[••ENDED••]").error() if category_error_count else Text("[••ENDED••]").valid()), "━┛", end="\n\n")
 
         error_count += category_error_count
+
+        if arg_verbose:
+            print(Text(" ").debug(title=True), Text(f"leaving category \"{category}\" ({rules[category]["name"]})").debug(), Text(f"({category_error_count} errors found)").error() if category_error_count else Text("(no error)").valid())
 
     return error_count
 
@@ -375,7 +378,6 @@ Rules selected when calling JCCS
                                         RULES[category].pop(argv[index + 1][1:])
                                         new_rules = RULES
                                         rule_exist = True
-                                        print("hi")
                                         break
 
                             else:
@@ -465,21 +467,36 @@ Rules selected with "-R" when calling JCCS
 
         set_var(argv[1:])
 
+    if arg_verbose:
+        print(Text(" ").debug(title=True), Text(f"starting JCCS").debug())
+
     print(Text("JCCS").bold(), "starting...", start="\n", end="\n\n")
 
     paths = get_files(root, arg_exclude)
 
+    if arg_verbose:
+        print(Text(" ").debug(title=True), Text(f"{len(paths)} paths found").debug())
+
     if paths:
+        if arg_verbose:
+            print(Text(" ").debug(title=True), Text(f"starting check").debug())
+
         error_amount = check(RULES, paths, silent=arg_silent, verbose=arg_verbose)
+
+        if arg_verbose:
+            print(Text(" ").debug(title=True), Text(f"ending check").debug())
 
     exit_status = (EXIT_FAILURE if error_amount else EXIT_SUCCESS)
 
     if error_amount > 0:
-        print(Text("\n") + Text("JCCS").bold(), "finished", Text("[KO]").error(), Text(f"({error_amount} error)").italic())
+        print(Text("JCCS").bold(), "finished", Text("[KO]").error(), Text(f"({error_amount} error)").italic())
     elif error_amount == 0:
-        print(Text("\n") + Text("JCCS").bold(), "finished", Text("[OK]").valid())
+        print(Text("JCCS").bold(), "finished", Text("[OK]").valid())
     else:
-        print(Text("\n") + Text("JCCS").bold().critic() + Text(" terminated").critic(), end="")
+        print(Text("JCCS").bold().critic() + Text(" terminated").critic(), end="")
+
+    if arg_verbose:
+        print(Text(" ").debug(title=True), Text(f"ending JCCS").debug())
 
     exit(exit_status)
 
