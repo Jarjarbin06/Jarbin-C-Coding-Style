@@ -25,7 +25,7 @@ RULES: dict[str, str | dict[str, str | dict[str, str | Callable | dict[str, Any]
 
 ## C-G - Global Scope ##
 try:
-    from rules.G import G1, G2, G3, G4, G5
+    from rules.G import G1, G2, G3, G4, G5, G6
 
 except Exception:
     print(Text("Failed to import G rules").error())
@@ -71,6 +71,12 @@ defined constants, and no inline assembly.
     RULES["G"][G5.name] = {
         "info": G5.info,
         "check": G5.check,
+        "arguments": {
+        }
+    }
+    RULES["G"][G6.name] = {
+        "info": G6.info,
+        "check": G6.check,
         "arguments": {
         }
     }

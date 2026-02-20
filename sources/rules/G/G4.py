@@ -46,7 +46,7 @@ def get_indentation_error(
             is_a_function = False
         if (not (is_a_comment or is_a_function)) and file_list_str[index] != "\n":
             if "=" in file_list_str[index] and len(file_list_str[index].split("=")[0].split()) > 1 and not "const" in file_list_str[index].split("=")[0].split():
-                return f"line number {index + 1}:\n---\n{file_list_str[index]}---\n"
+                return f"line number {index + 1}:\n---\n{file_list_str[index]}{"" if file_list_str[index].endswith("\n") else "\n"}---\n"
     return ""
 
 def check(

@@ -7,10 +7,10 @@
 #############################
 
 # INFO #
-name = "G2"
+name = "G6"
 info = """
-C-G2 - Separation of functions
-Inside a source file, implementations of functions must be separated by one and only one empty line.
+C-G6 - Line endings
+Line endings must be done in UNIX style (with \"\n\"), and must never end with a backslash (\"\\\").
 """
 
 # Imports #
@@ -27,23 +27,14 @@ def get_line_error(
         file : str
     ) -> str:
 
-    is_a_comment = False
-
     with open(file, 'r') as f:
         file_list_str = f.readlines()
     f.close()
 
     for index in range(len(file_list_str)):
-        if "/*" in file_list_str[index]:
-            is_a_comment = True
-        if "*/" in file_list_str[index]:
-            is_a_comment = False
-        if (not is_a_comment) and file_list_str[index] == "}\n":
-            if (index + 2) < len(file_list_str):
-                if not (file_list_str[index + 1] == "\n" and file_list_str[index + 2] != "\n"):
-                    return f"line number {index + 1}-{index + 3}:\n---\n{file_list_str[index]}{file_list_str[index + 1]}{file_list_str[index + 2]}{"" if file_list_str[index].endswith("\n") else "\n"}---\nthere must be an empty line between functions"
+        if not file_list_str[index].endswith("\n"):
+            return f"line number {index + 1}:\n---\n{file_list_str[index]}{"" if file_list_str[index].endswith("\n") else "\n"}---\nline not ending with \\n"
     return ""
-
 
 def check(
         paths,
@@ -64,18 +55,18 @@ def check(
             file : str
         ) -> bool:
 
-        if not file.endswith(".c"):
+        if not (file.endswith(".c") or file.endswith(".h")):
             if verbose == 2:
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} not checked").debug(), Text("(skip)").info().italic())
             return True
 
         if get_line_error(file):
             if verbose:
-                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} functions not separated by empty line").debug(), Text("(invalid)").error().italic())
+                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} has an invalid line ending").debug(), Text("(invalid)").error().italic())
             return False
 
         if verbose == 2:
-            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} functions separation valid").debug(), Text("(valid)").valid().italic())
+            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} line ending valid").debug(), Text("(valid)").valid().italic())
         return True
 
     if verbose:
@@ -84,7 +75,7 @@ def check(
     # Main loop #
     for file in paths:
         try :
-            assert check_file_ext(file), f"{file}\nInside a source file, implementations of functions must be separated by one and only one empty line\n\n{get_line_error(file)}"
+            assert check_file_ext(file), f"{file}\nLine endings must be done in UNIX style (with \"\\n\"), and must never end with a backslash (\"\\\")\n\n{get_line_error(file)}"
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error)))

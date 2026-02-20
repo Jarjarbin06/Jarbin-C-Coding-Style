@@ -62,6 +62,12 @@ reinstall:
 	@make -s uninstall install
 	@echo -e "$(GREEN) [REINSTALL] $(PACKAGE_NAME_SHORT) reinstalled$(NC)"
 
+update:
+	@echo -e "$(YELLOW) [UPDATE] Updating $(PACKAGE_NAME_SHORT)$(NC)"
+	@git pull
+	@make -s reinstall
+	@echo -e "$(GREEN) [UPDATE] $(PACKAGE_NAME_SHORT) updated$(NC)"
+
 # ------------------------------------------------------------
 # SAFETY
 # ------------------------------------------------------------
