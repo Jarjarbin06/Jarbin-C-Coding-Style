@@ -7,11 +7,10 @@
 #############################
 
 # INFO #
-name = "G4"
+name = "G5"
 info = """
-C-G4 - Global variables
-Global variables must be avoided as much as possible.
-Only global constants should be used.
+C-G5 - include
+include directives must only include C header (.h) files.
 """
 
 # Imports #
@@ -24,7 +23,7 @@ Text = Console.Text.Text
 # Custom Variables #
 
 # Checker #
-def get_indentation_error(
+def get_include_error(
         file : str
     ) -> str:
 
@@ -45,8 +44,8 @@ def get_indentation_error(
         if is_a_function and file_list_str[index].replace(" ", "") == "}\n":
             is_a_function = False
         if (not (is_a_comment or is_a_function)) and file_list_str[index] != "\n":
-            if "=" in file_list_str[index] and len(file_list_str[index].split("=")[0].split()) > 1 and not "const" in file_list_str[index].split("=")[0].split():
-                return f"line number {index + 1}:\n---\n{file_list_str[index]}---\n"
+            if file_list_str[index].replace(" ", "").startswith("#include") and not ".h" in file_list_str[index]:
+                return f"line number {index + 1}:\n---\n{file_list_str[index]}---\ninclude"
     return ""
 
 def check(
@@ -68,18 +67,18 @@ def check(
             file : str
         ) -> bool:
 
-        if not file.endswith(".c"):
+        if not (file.endswith(".c") or file.endswith(".h")):
             if verbose == 2:
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} not checked").debug(), Text("(skip)").info().italic())
             return True
 
-        if get_indentation_error(file):
+        if get_include_error(file):
             if verbose:
-                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} has a global variable").debug(), Text("(invalid)").error().italic())
+                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} has an invalid include").debug(), Text("(invalid)").error().italic())
             return False
 
         if verbose == 2:
-            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} variables valid").debug(), Text("(valid)").valid().italic())
+            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} includes valid").debug(), Text("(valid)").valid().italic())
         return True
 
     if verbose:
@@ -88,7 +87,7 @@ def check(
     # Main loop #
     for file in paths:
         try :
-            assert check_file_ext(file), f"{file}\nOnly global constants should be used\n\n{get_indentation_error(file)}"
+            assert check_file_ext(file), f"{file}\nInclude directives must only include C header (.h) files\n\n{get_include_error(file)}"
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error)))

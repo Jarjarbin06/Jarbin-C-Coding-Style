@@ -23,7 +23,7 @@ Text = Console.Text.Text
 # Custom Variables #
 
 # Checker #
-def get_indentation_error(
+def get_global_error(
         file : str
     ) -> str:
 
@@ -72,7 +72,7 @@ def check(
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} not checked").debug(), Text("(skip)").info().italic())
             return True
 
-        if get_indentation_error(file):
+        if get_global_error(file):
             if verbose:
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} has bad indentation").debug(), Text("(invalid)").error().italic())
             return False
@@ -87,7 +87,7 @@ def check(
     # Main loop #
     for file in paths:
         try :
-            assert check_file_ext(file), f"{file}\nThe preprocessor directives must be indented according to the level of indirection\n\n{get_indentation_error(file)}"
+            assert check_file_ext(file), f"{file}\nThe preprocessor directives must be indented according to the level of indirection\n\n{get_global_error(file)}"
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error)))
