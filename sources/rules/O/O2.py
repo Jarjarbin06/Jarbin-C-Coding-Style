@@ -81,7 +81,7 @@ def check(
     # Main loop #
     for file in paths:
         try :
-            assert check_file_ext(file), f"{file}\ninvalid extension\n\n(.{file.split("/")[-1].split(".")[-1]} is not in [.{auth_ext.replace(" ", ", .")}])"
+            assert check_file_ext(file), f"{file}\nSources in a C program must only have .c or .h extensions"
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error)))

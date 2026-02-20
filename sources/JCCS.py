@@ -281,6 +281,28 @@ if __name__ == '__main__':
     arg_verbose : int = 0
     arg_exclude : str = ""
 
+    if "-V" in argv or "--verbose" in argv:
+        print(Text(" ").debug(title=True), Text(f"Flag: -V/--verbose").debug(), Text("(on)").valid().italic())
+
+        arg_verbose = 1
+
+    elif "--super-verbose" in argv:
+        print(Text(" ").debug(title=True), Text(f"Flag: --super-verbose").debug(), Text("(full)").valid().italic())
+
+        arg_verbose = 2
+
+    elif "-s" in argv or "--silent" in argv:
+        if arg_verbose:
+            print(Text(" ").debug(title=True), Text(f"Flag: -s/--silent").debug(), Text("(on)").valid().italic())
+
+        arg_silent = 1
+
+    elif "--super-silent" in argv:
+        if arg_verbose:
+            print(Text(" ").debug(title=True), Text(f"Flag: --super-silent").debug(), Text("(full)").valid().italic())
+
+        arg_silent = 2
+
     if len(argv) > 1:
 
         index: int = 1
@@ -289,30 +311,15 @@ if __name__ == '__main__':
 
             if argv[index].startswith("-"):
                 if argv[index] in ["-V", "--verbose"]:
-                    print(Text(" ").debug(title=True), Text(f"Flag: -V/--verbose").debug(), Text("(on)").valid().italic())
-
-                    arg_verbose = 1
                     index += 1
 
                 elif argv[index] in ["--super-verbose"]:
-                    if arg_verbose:
-                        print(Text(" ").debug(title=True), Text(f"Flag: --super-verbose").debug(), Text("(full)").valid().italic())
-
-                    arg_verbose = 2
                     index += 1
 
                 elif argv[index] in ["-s", "--silent"]:
-                    if arg_verbose:
-                        print(Text(" ").debug(title=True), Text(f"Flag: -s/--silent").debug(), Text("(on)").valid().italic())
-
-                    arg_silent = 1
                     index += 1
 
                 elif argv[index] in ["--super-silent"]:
-                    if arg_verbose:
-                        print(Text(" ").debug(title=True), Text(f"Flag: --super-silent").debug(), Text("(full)").valid().italic())
-
-                    arg_silent = 2
                     index += 1
 
                 elif argv[index] in ["-r", "--root"]:

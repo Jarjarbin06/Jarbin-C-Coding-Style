@@ -41,7 +41,7 @@ def get_line_error(
         if (not is_a_comment) and file_list_str[index] == "}\n":
             if (index + 2) < len(file_list_str):
                 if not (file_list_str[index + 1] == "\n" and file_list_str[index + 2] != "\n"):
-                    return f"line number {index + 1}-{index + 3}:\n---\n{file_list_str[index]}{file_list_str[index + 1]}{file_list_str[index + 2]}---\n"
+                    return f"line number {index + 1}-{index + 3}:\n---\n{file_list_str[index]}{file_list_str[index + 1]}{file_list_str[index + 2]}---\nthere must be an empty line between functions"
     return ""
 
 
@@ -84,7 +84,7 @@ def check(
     # Main loop #
     for file in paths:
         try :
-            assert check_file_ext(file), f"{file}\n functions must be deparated by one and only one empty line\n\n{get_line_error(file)}"
+            assert check_file_ext(file), f"{file}\nInside a source file, implementations of functions must be separated by one and only one empty line\n\n{get_line_error(file)}"
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error)))

@@ -85,7 +85,7 @@ def check(
     # Main loop #
     for file in paths:
         try :
-            assert check_file_ext(file), f"{file}\nfile name doesn't follow the snake_case convention\n\nfile name contain a letter not in [{valid_char.replace("", ", ")[2:-2]}]"
+            assert check_file_ext(file), f"{file}\nThe name of the file must define the logical entity it represents, and thus be clear, precise, explicit and unambiguous"
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error)))

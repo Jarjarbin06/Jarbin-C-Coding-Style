@@ -54,7 +54,7 @@ def check(
     # Main loop #
     for file in paths:
         try :
-            assert check_file_ext(file), f"{file}\nfile isn't coherent"
+            assert check_file_ext(file), f"{file}\nA source file must match a logical entity, and group all the functions associated with that entity"
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error)))

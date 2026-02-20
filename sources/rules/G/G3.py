@@ -38,7 +38,7 @@ def get_indentation_error(
         if "/*" in file_list_str[index]:
             is_a_comment = True
         if "*/" in file_list_str[index]:
-            is_a_comment = True
+            is_a_comment = False
         if (not is_a_comment) and file_list_str[index].replace(" ", "") != "\n":
             if file_list_str[index].replace(" ", "").startswith("#end"):
                 indentation_level -= 1
@@ -87,7 +87,7 @@ def check(
     # Main loop #
     for file in paths:
         try :
-            assert check_file_ext(file), f"{file}\n functions must be deparated by one and only one empty line\n\n{get_indentation_error(file)}"
+            assert check_file_ext(file), f"{file}\nThe preprocessor directives must be indented according to the level of indirection\n\n{get_indentation_error(file)}"
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error)))

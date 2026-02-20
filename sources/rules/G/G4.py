@@ -7,10 +7,11 @@
 #############################
 
 # INFO #
-name = "G1"
+name = "G4"
 info = """
-C-G1 - File header
-C files (.c, .h, ...) and every Makefiles must always start with the standard header of the school.
+C-G4 - Global variables
+Global variables must be avoided as much as possible.
+Only global constants should be used.
 """
 
 # Imports #
@@ -23,6 +24,31 @@ Text = Console.Text.Text
 # Custom Variables #
 
 # Checker #
+def get_indentation_error(
+        file : str
+    ) -> str:
+
+    is_a_comment = False
+    is_a_function = False
+
+    with open(file, 'r') as f:
+        file_list_str = f.readlines()
+    f.close()
+
+    for index in range(len(file_list_str)):
+        if "/*" in file_list_str[index]:
+            is_a_comment = True
+        if "*/" in file_list_str[index]:
+            is_a_comment = False
+        if (not is_a_function or is_a_comment) and "{" in file_list_str[index]:
+            is_a_function = True
+        if is_a_function and file_list_str[index].replace(" ", "") == "}\n":
+            is_a_function = False
+        if (not (is_a_comment or is_a_function)) and file_list_str[index] != "\n":
+            if "=" in file_list_str[index] and not file_list_str[index].replace(" ", "").startswith("const"):
+                return f"line number {index + 1}:\n---\n{file_list_str[index]}---\n"
+    return ""
+
 def check(
         paths,
         **kwargs
@@ -42,30 +68,18 @@ def check(
             file : str
         ) -> bool:
 
-        if not (file.endswith(".c") or file.endswith(".h") or file.endswith("Makefile")):
+        if not file.endswith(".c"):
             if verbose == 2:
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} not checked").debug(), Text("(skip)").info().italic())
             return True
 
-        with open(file, 'r') as f:
-            file_str = f.read()
-        f.close()
-
-        if (file.endswith(".c") or file.endswith(".h")) and not (
-            file_str.startswith("/*\n** EPITECH PROJECT, ") and
-            "\n** File description:" in file_str and
-            "\n*/\n" in file_str
-        ) or file.endswith("Makefile") and not (
-            "##\n## EPITECH PROJECT, " in file_str and
-            "\n## File description:" in file_str and
-            "\n##\n" in file_str
-        ):
+        if get_indentation_error(file):
             if verbose:
-                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} is missing the epitech file header").debug(), Text("(invalid)").error().italic())
+                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} has a global variable").debug(), Text("(invalid)").error().italic())
             return False
 
         if verbose == 2:
-            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} epitech file header valid").debug(), Text("(valid)").valid().italic())
+            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} variables valid").debug(), Text("(valid)").valid().italic())
         return True
 
     if verbose:
@@ -74,7 +88,7 @@ def check(
     # Main loop #
     for file in paths:
         try :
-            assert check_file_ext(file), f"{file}\nC files (.c, .h, ...) and every Makefiles must always start with the standard header of the school"
+            assert check_file_ext(file), f"{file}\nOnly global constants should be used\n\n{get_indentation_error(file)}"
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error)))

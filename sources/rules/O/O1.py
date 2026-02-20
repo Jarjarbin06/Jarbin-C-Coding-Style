@@ -75,7 +75,7 @@ def check(
     # Main loop #
     for file in paths:
         try :
-            assert check_file_ext(file), f"{file}\ninvalid extension (compiled, temporary or unnecessary file)\n\n(.{file.split("/")[-1].split(".")[-1]} is in [.{unauth_ext.replace(" ", ", .")}])"
+            assert check_file_ext(file), f"{file}\nThe repository must not contain compiled (.o, .a, .so, ...), temporary or unnecessary files (*~, #*#, etc.)"
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error)))
