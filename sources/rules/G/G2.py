@@ -23,18 +23,25 @@ Text = Console.Text.Text
 # Custom Variables #
 
 # Checker #
-def get_line_errors(
+def get_line_error(
         file : str
     ) -> str:
+
+    is_a_comment = False
+
     with open(file, 'r') as f:
         file_list_str = f.readlines()
     f.close()
 
     for index in range(len(file_list_str)):
-        if file_list_str[index] == "}\n":
+        if "/*" in file_list_str[index]:
+            is_a_comment = True
+        if "*/" in file_list_str[index]:
+            is_a_comment = False
+        if (not is_a_comment) and file_list_str[index] == "}\n":
             if (index + 2) < len(file_list_str):
                 if not (file_list_str[index + 1] == "\n" and file_list_str[index + 2] != "\n"):
-                    return f"\n---\n{file_list_str[index]}{file_list_str[index + 1]}{file_list_str[index + 2]}\n---\n"
+                    return f"line number {index + 1}-{index + 3}:\n---\n{file_list_str[index]}{file_list_str[index + 1]}{file_list_str[index + 2]}---\n"
     return ""
 
 
@@ -62,7 +69,7 @@ def check(
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} not checked").debug(), Text("(skip)").info().italic())
             return True
 
-        if get_line_errors(file):
+        if get_line_error(file):
             if verbose:
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} functions not separated by empty line").debug(), Text("(invalid)").error().italic())
             return False
@@ -77,7 +84,7 @@ def check(
     # Main loop #
     for file in paths:
         try :
-            assert check_file_ext(file), f"{file}\n functions must be deparated by one and only one empty line\n\n{get_line_errors(file)}"
+            assert check_file_ext(file), f"{file}\n functions must be deparated by one and only one empty line\n\n{get_line_error(file)}"
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error)))

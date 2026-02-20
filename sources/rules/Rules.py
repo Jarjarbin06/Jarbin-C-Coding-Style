@@ -56,13 +56,12 @@ defined constants, and no inline assembly.
         "arguments": {
         }
     }
-    """
     RULES["G"][G3.name] = {
         "info": G3.info,
         "check": G3.check,
         "arguments": {
         }
-    }"""
+    }
 
 ## C-H - Header Files ##
 
