@@ -1,0 +1,64 @@
+#!/bin/zsh
+#compdef JCCS
+
+function _JCCS() {
+    local state
+    local -a rules categories
+
+    # Known rule categories
+    categories=(
+        'C-A:Advanced'
+        'C-C:Control Structures'
+        'C-F:Functions'
+        'C-G:Global Scope'
+        'C-H:Header Files'
+        'C-L:Layout'
+        'C-O:Files Organization'
+        'C-V:Variables And Types'
+    )
+
+    # Known rules
+    rules=(
+        'G1'
+        'G2'
+        'G3'
+        'O1'
+        'O2'
+        'O3'
+        'O4'
+    )
+
+    _arguments -s -S \
+        '(-h --help)'{-h,--help}'[Display help message and exit]' \
+        '(-v --version)'{-v,--version}'[Show program name, version and author and exit]' \
+        '(-a --show-arguments)'{-a,--show-arguments}'[Display all available rules and exit]' \
+        '(-s --silent)'{-s,--silent}'[Display only rule summaries]' \
+        '--super-silent[Display only final JCCS result]' \
+        '(-V --verbose)'{-V,--verbose}'[Enable verbose mode]' \
+        '--super-verbose[Enable full verbose mode]' \
+        '(-r --root)'{-r,--root}'[Define root directory]:directory:_files -/' \
+        '(-e --exclude)'{-e,--exclude}'[Exclude a path]:directory:_files -/' \
+        '(-R --rule)'{-R,--rule}'[Run specific rule]:rule:->rule' \
+        '(-S --set)'{-S,--set}'[Override rule argument]:category:->category' \
+        '*::args:->args'
+
+    case $state in
+        rule)
+            _describe 'rules' rules
+            ;;
+        category)
+            _describe 'categories' categories
+            ;;
+        args)
+            if [[ ${words[CURRENT-1]} == "-S" || ${words[CURRENT-1]} == "--set" ]]; then
+                if (( CURRENT == 4 )); then
+                    _describe 'rules' rules
+                elif (( CURRENT == 5 )); then
+                    _message "argument name"
+                elif (( CURRENT == 6 )); then
+                    _message "value"
+                fi
+            fi
+            ;;
+    esac
+}

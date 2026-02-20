@@ -13,7 +13,7 @@
 PYTHON              ?= python3
 SHELL               := /bin/bash
 SCRIPT_DIR          := scripts
-PACKAGE_NAME        := jarbin_c_coding_style
+PACKAGE_NAME        := Jarbin_C_Coding_Style
 PACKAGE_NAME_SHORT  := JCCS
 
 # Colors (safe for most terminals)
@@ -33,6 +33,7 @@ NC                  := \033[0m
 # ------------------------------------------------------------
 
 help:
+	@echo -e "$(GREEN)$(PACKAGE_NAME) ($(PACKAGE_NAME_SHORT))$(NC)"
 	@echo -e "$(GREEN)Available commands:$(NC)"
 	@echo ""
 	@echo -e "\tmake/make help\t\tShow this help message"

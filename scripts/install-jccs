@@ -11,28 +11,52 @@ NC="\033[0m"
 JCCS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 
 # FUNCTION #
-install_jccs() {
-    local file="$1"
+install_jccs_bash() {
+    local bash="$USER_HOME/.bashrc"
 
-    if [[ -f "$file" ]]; then
-        if grep -q "\[JCCS\]" "$file"; then
-            echo -e "$YELLOW JCCS already installed in $file$NC"
+    if [[ -f "$bash" ]]; then
+        if grep -q "\[JCCS\]" "$bash"; then
+            echo -e "$YELLOW JCCS already installed in $bash$NC"
         else
-            echo "export PATH=\"$JCCS_DIR:\$PATH\" #[JCCS] - flag used when uninstalling" >> "$file"
-            echo -e "$GREEN JCCS installed in $file$NC"
+            echo "export PATH=\"$JCCS_DIR:\$PATH\" #[JCCS] - flag used when uninstalling" >> "$bash"
+            cp -f "$JCCS_DIR/ressources/bash-auto-completion" "/etc/bash_completion.d/jccs"
+            echo -e "$GREEN JCCS installed in $bash$NC"
         fi
     else
-        echo "$RED $file not found$NC"
+        echo "$RED $bash not found$NC"
     fi
 }
 
-# SHELL SOURCES #
-BASH="$HOME/.bashrc"
-ZSH="$HOME/.zshrc"
+install_jccs_zsh() {
+    local zsh="$USER_HOME/.zshrc"
 
-# INSTALL #
-install_jccs "$BASH"
-install_jccs "$ZSH"
+    if [[ -f "$zsh" ]]; then
+        if grep -q "\[JCCS\]" "$zsh"; then
+            echo -e "$YELLOW JCCS already installed in $zsh$NC"
+        else
+            echo "export PATH=\"$JCCS_DIR:\$PATH\" #[JCCS] - flag used when uninstalling" >> "$zsh"
+            echo "fpath=(~/.zsh/completions \$fpath) #[JCCS] - flag used when uninstalling" >> "$zsh"
+            echo "autoload -Uz _JCCS #[JCCS] - flag used when uninstalling" >> "$zsh"
+            echo "compdef _JCCS JCCS #[JCCS] - flag used when uninstalling" >> "$zsh"
+            cp -f "$JCCS_DIR/ressources/zsh-auto-completion" "$USER_HOME/.zsh/completions/_JCCS"
+            echo -e "$GREEN JCCS installed in $zsh$NC"
+        fi
+    else
+        echo "$RED $zsh not found$NC"
+    fi
+}
 
-# END MESSAGE #
-echo -e "\n\t$BLUE[NOTE] install-jccs: you can now open a new shell for the changes to take effect and use \"JCCS\" wherever you need\n$NC"
+# IS SUDO #
+if [ "$EUID" -ne 0 ]; then
+    echo -e "$RED you need to run this command with sudo$NS"
+else
+    # SET USER_HOME #
+    USER_HOME=$(eval echo "~$SUDO_USER")
+
+    # INSTALL #
+    install_jccs_bash
+    install_jccs_zsh
+
+    # END MESSAGE #
+    echo -e "\n\t$BLUE[NOTE] install-jccs: you can now open a new shell for the changes to take effect and use \"JCCS\" wherever you need\n$NC"
+fi

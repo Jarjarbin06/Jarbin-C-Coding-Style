@@ -1,0 +1,71 @@
+#!/bin/bash
+# Bash completion for JCCS (Jarbin-C-Coding-Style)
+
+_jccs_completion()
+{
+    local cur prev words cword
+    _init_completion -n : || return
+
+    # Available options
+    local opts="
+        -h --help
+        -v --version
+        -r --root
+        -e --exclude
+        -R --rule
+        -S --set
+        -a --show-arguments
+        -s --silent
+        --super-silent
+        -V --verbose
+        --super-verbose
+    "
+
+    # Known rule categories (adjust if needed)
+    local categories="C-A C-C C-F C-G C-H C-L C-O C-V"
+
+    # Known rules (extend dynamically if needed)
+    local rules="
+        G1 G2 G3
+        O1 O2 O3 O4
+    "
+
+    case "$prev" in
+        -r|--root|-e|--exclude)
+            # Path completion
+            _filedir -d
+            return
+            ;;
+        -R|--rule)
+            COMPREPLY=( $(compgen -W "$rules" -- "$cur") )
+            return
+            ;;
+        -S|--set)
+            # First argument after -S → CATEGORY
+            COMPREPLY=( $(compgen -W "$categories" -- "$cur") )
+            return
+            ;;
+    esac
+
+    # Handle deeper arguments for -S
+    if [[ "${words[1]}" == "-S" || "${words[1]}" == "--set" ]]; then
+        case "$cword" in
+            2)
+                COMPREPLY=( $(compgen -W "$categories" -- "$cur") )
+                return
+                ;;
+            3)
+                COMPREPLY=( $(compgen -W "$rules" -- "$cur") )
+                return
+                ;;
+        esac
+    fi
+
+    # Default: complete options
+    if [[ "$cur" == -* ]]; then
+        COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
+        return
+    fi
+}
+
+complete -F _jccs_completion JCCS
