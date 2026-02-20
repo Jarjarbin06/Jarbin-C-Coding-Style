@@ -9,7 +9,7 @@
 
 # Program info #
 __program__ = "JCCS (Jarbin-C-Coding-Style)"
-__version__ : str = "v0.4"
+__version__ : str = "v0.5"
 __author__ : str = "Jarjarbin06"
 __email__ : str = "nathan.amaraggi@epitech.eu"
 
@@ -337,68 +337,56 @@ if __name__ == '__main__':
                         print(Text(f"missing argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
                         exit(EXIT_FAILURE)
 
+
                 elif argv[index] in ["-R", "--rule"]:
+
                     if arg_verbose:
                         print(Text(" ").debug(title=True), Text(f"Flag: -R/--rule").debug(), Text("(used)").info().italic())
 
                     new_rules = {}
 
                     if (index + 1) < len(argv):
-                        if argv[index + 1].startswith("[") and argv[index + 1].endswith("]"):
-                            new_rules = {
-                                "CUSTOM": {
-                                    "name": "Custom Rule Selection",
-                                    "info": """
-Rules selected when calling JCCS
-"""
-                                }
-                            }
+                        collected_rules = []
+                        i = index + 1
 
-                            for arg in argv[index + 1][1:-1].split(" "):
-                                rule_exist = False
-
-                                for category in RULES:
-                                    if arg in RULES[category]:
-                                        new_rules["CUSTOM"][arg] = RULES[category][arg]
-                                        rule_exist = True
-                                        break
-
-                                if not rule_exist:
-                                    print(Text(f"Rule {arg} doesn't exist (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
-                                    exit(EXIT_FAILURE)
-
-                        else:
-                            rule_exist = False
-
-                            if argv[index + 1].startswith("-"):
-                                for category in RULES:
-                                    if argv[index + 1][1:] in RULES[category]:
-                                        RULES[category].pop(argv[index + 1][1:])
-                                        new_rules = RULES
-                                        rule_exist = True
-                                        break
+                        while i < len(argv) and not argv[i].startswith("-"):
+                            if " " in argv[i]:
+                                collected_rules.extend(argv[i].split(" "))
 
                             else:
-                                for category in RULES:
-                                    if argv[index + 1] in RULES[category]:
-                                        new_rules = {
-                                            "CUSTOM": {
-                                                "name": "Custom Rule Selection",
-                                                "info": """
-Rules selected with "-R" when calling JCCS
-""",
-                                                argv[index + 1]: RULES[category][argv[index + 1]]
-                                            }
-                                        }
-                                        rule_exist = True
-                                        break
+                                collected_rules.append(argv[i])
+
+                            i += 1
+
+                        if not collected_rules:
+                            print(Text(f"missing argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                            exit(EXIT_FAILURE)
+
+                        new_rules = {
+                            "CUSTOM": {
+                                "name": "Custom Rule Selection",
+                                "info": """
+                Rules selected when calling JCCS
+                """
+                            }
+                        }
+                        for arg in collected_rules:
+
+                            rule_exist = False
+
+                            for category in RULES:
+                                if arg in RULES[category]:
+                                    new_rules["CUSTOM"][arg] = RULES[category][arg]
+                                    rule_exist = True
+                                    break
 
                             if not rule_exist:
-                                print(Text(f"Rule {argv[index + 1]} doesn't exist (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                                print(Text(
+                                    f"Rule {arg} doesn't exist (\"{argv[index]}\" near position {index + 1})").error(), file=stderr)
                                 exit(EXIT_FAILURE)
 
                         RULES = new_rules
-                        index += 2
+                        index = i
 
                     else:
                         print(Text(f"missing argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
