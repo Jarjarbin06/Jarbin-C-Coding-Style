@@ -26,14 +26,13 @@ Text = Console.Text.Text
 
 # Checker #
 def check(
-        *args,
+        paths,
         **kwargs
     ) -> list[RuleError] | None:
 
     kwargs = kwargs["kwargs"]
     errors = []
-    files_path : list[str] = args[0]
-    verbose = kwargs.get("verbose", False)
+    verbose = kwargs.get("verbose", 0)
 
     # Custom variables #
 
@@ -44,7 +43,7 @@ def check(
     def check_file_ext(
             file : str
         ) -> bool:
-        if verbose:
+        if verbose == 2:
             print(Text(" ").debug(title=True), Text(f"C-{name}: {file} cannot be checked on this rule").debug(), Text("(skip)").info().italic())
 
         return True
@@ -53,7 +52,7 @@ def check(
         print(Text(" ").debug(title=True), Text(f"C-{name}: starting check").debug())
 
     # Main loop #
-    for file in files_path:
+    for file in paths:
         try :
             assert check_file_ext(file), f"{file}\nfile isn't coherent"
 

@@ -26,14 +26,13 @@ INCLUDED_FOLDERS = "sources includes tests"
 
 # Checker #
 def check(
-        *args,
+        paths,
         **kwargs
     ) -> list[RuleError] | None:
 
     kwargs = kwargs["kwargs"]
     errors = []
-    files_path : list[str] = args[0]
-    verbose = kwargs.get("verbose", False)
+    verbose = kwargs.get("verbose", 0)
 
     # Custom variables #
     auth_ext = kwargs.get("AUTHORIZED_EXTENSIONS", AUTHORIZED_EXTENSIONS)
@@ -54,7 +53,7 @@ def check(
                 folder_check = True
 
         if not folder_check :
-            if verbose:
+            if verbose == 2:
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} not in INCLUDED_FOLDERS").debug(), Text("(skip)").info().italic())
             return True
 
@@ -63,7 +62,7 @@ def check(
         if "." in file_ext :
             file_ext = file_ext.split(".")[-1]
         else :
-            if verbose:
+            if verbose == 2:
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} doesn't have an extension").debug(), Text("(skip)").info().italic())
             return True
 
@@ -72,7 +71,7 @@ def check(
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} extension not allowed").debug(), Text("(invalid)").error().italic())
             return False
 
-        if verbose:
+        if verbose == 2:
             print(Text(" ").debug(title=True), Text(f"C-{name}: {file} extension allowed").debug(), Text("(valid)").valid().italic())
         return True
 
@@ -80,7 +79,7 @@ def check(
         print(Text(" ").debug(title=True), Text(f"C-{name}: starting check").debug())
 
     # Main loop #
-    for file in files_path:
+    for file in paths:
         try :
             assert check_file_ext(file), f"{file}\ninvalid extension\n\n(.{file.split("/")[-1].split(".")[-1]} is not in [.{auth_ext.replace(" ", ", .")}])"
 

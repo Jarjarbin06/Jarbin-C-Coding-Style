@@ -7,10 +7,10 @@
 #############################
 
 # INFO #
-name = "G2"
+name = "G3"
 info = """
-C-G2 - Separation of functions
-Inside a source file, implementations of functions must be separated by one and only one empty line.
+C-G3 - Indentation of preprocessor directives
+The preprocessor directives must be indented according to the level of indirection.
 """
 
 # Imports #
@@ -23,28 +23,14 @@ Text = Console.Text.Text
 # Custom Variables #
 
 # Checker #
-def get_line_errors(
-        file : str
-    ) -> str:
-    with open(file, 'r') as f:
-        file_list_str = f.readlines()
-    f.close()
-
-    for index in range(len(file_list_str)):
-        if file_list_str[index] == "}\n":
-            if (index + 2) < len(file_list_str):
-                if not (file_list_str[index + 1] == "\n" and file_list_str[index + 2] != "\n"):
-                    return f"\n---\n{file_list_str[index]}{file_list_str[index + 1]}{file_list_str[index + 2]}\n---\n"
-    return ""
-
-
 def check(
-        paths,
+        *args,
         **kwargs
     ) -> list[RuleError] | None:
 
     kwargs = kwargs["kwargs"]
     errors = []
+    files_path : list[str] = args[0]
     verbose = kwargs.get("verbose", 0)
 
     # Custom variables #
@@ -62,22 +48,26 @@ def check(
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} not checked").debug(), Text("(skip)").info().italic())
             return True
 
-        if get_line_errors(file):
-            if verbose:
-                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} functions not separated by empty line").debug(), Text("(invalid)").error().italic())
+        with open(file, 'r') as f:
+            file_str = f.read()
+        f.close()
+
+        if False:
+            if verbose == 2:
+                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} is missing the epitech file header").debug(), Text("(invalid)").error().italic())
             return False
 
         if verbose == 2:
-            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} functions separation valid").debug(), Text("(valid)").valid().italic())
+            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} epitech file header valid").debug(), Text("(valid)").valid().italic())
         return True
 
     if verbose:
         print(Text(" ").debug(title=True), Text(f"C-{name}: starting check").debug())
 
     # Main loop #
-    for file in paths:
+    for file in files_path:
         try :
-            assert check_file_ext(file), f"{file}\n functions must be deparated by one and only one empty line\n\n{get_line_errors(file)}"
+            assert check_file_ext(file), f"{file}\n functions must be deparated by one and only one empty line"
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error)))

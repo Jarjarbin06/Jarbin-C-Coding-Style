@@ -7,7 +7,7 @@
 #############################
 
 # INFO #
-name = "C1"
+name = "O1"
 info = """
 C-O1 - Contents of the repository
 The repository must not contain compiled (.o, .a, .so, ...), temporary or unnecessary files (*~, #*#, etc.).
@@ -26,14 +26,13 @@ EXCLUDED_FOLDERS = "bonus"
 
 # Checker #
 def check(
-        *args,
+        paths,
         **kwargs
     ) -> list[RuleError] | None:
 
     kwargs = kwargs["kwargs"]
     errors = []
-    files_path : list[str] = args[0]
-    verbose = kwargs.get("verbose", False)
+    verbose = kwargs.get("verbose", 0)
 
     # Custom variables #
     unauth_ext = kwargs.get("UNAUTHORIZED_EXTENSIONS", UNAUTHORIZED_EXTENSIONS)
@@ -49,7 +48,7 @@ def check(
 
         for folder in excluded_folders.split(" ") :
             if f"/{folder.upper()}/" in file.upper() or f"{folder.upper()}/" in file.upper() :
-                if verbose:
+                if verbose == 2:
                     print(Text(" ").debug(title=True), Text(f"C-{name}: {file} in EXCLUDED_FOLDERS (\"{folder}\")").debug(), Text("(skip)").info().italic())
                 return True
 
@@ -58,7 +57,7 @@ def check(
         if "." in file_ext :
             file_ext = file_ext.split(".")[-1]
         else:
-            if verbose:
+            if verbose == 2:
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} doesn't have an extension").debug(), Text("(skip)").info().italic())
             return True
 
@@ -66,7 +65,7 @@ def check(
             if verbose:
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} extension not allowed").debug(), Text("(invalid)").error().italic())
             return False
-        if verbose:
+        if verbose == 2:
             print(Text(" ").debug(title=True), Text(f"C-{name}: {file} extension allowed").debug(), Text("(valid)").valid().italic())
         return True
 
@@ -74,7 +73,7 @@ def check(
         print(Text(" ").debug(title=True), Text(f"C-{name}: starting check").debug())
 
     # Main loop #
-    for file in files_path:
+    for file in paths:
         try :
             assert check_file_ext(file), f"{file}\ninvalid extension (compiled, temporary or unnecessary file)\n\n(.{file.split("/")[-1].split(".")[-1]} is in [.{unauth_ext.replace(" ", ", .")}])"
 

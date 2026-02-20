@@ -32,14 +32,13 @@ for ascii_int in range(ord("0"), ord("9") + 1):
 
 # Checker #
 def check(
-        *args,
+        paths,
         **kwargs
     ) -> list[RuleError] | None:
 
     kwargs = kwargs["kwargs"]
     errors = []
-    files_path : list[str] = args[0]
-    verbose = kwargs.get("verbose", False)
+    verbose = kwargs.get("verbose", 0)
 
     # Custom variables #
     checked_ext = kwargs.get("CHECKED_EXTENSIONS", CHECKED_EXTENSIONS)
@@ -59,12 +58,12 @@ def check(
             file_ext = file_name.split(".")[-1]
             file_name = file_name.split(".")[0]
         else :
-            if verbose:
+            if verbose == 2:
                 print(Text(" ").debug(title=True), Text(f"C-{name} {file} doesn't have an extension").debug(), Text("(skip)").info().italic())
             return True
 
         if not file_ext in checked_ext.split(" ") :
-            if verbose:
+            if verbose == 2:
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} extension not checked").debug(), Text("(skip)").info().italic())
             return True
 
@@ -75,7 +74,7 @@ def check(
 
                 return False
 
-        if verbose:
+        if verbose == 2:
             print(Text(" ").debug(title=True), Text(f"C-{name}: {file} name only contain allowed letters").debug(), Text("(valid)").valid().italic())
 
         return True
@@ -84,9 +83,9 @@ def check(
         print(Text(" ").debug(title=True), Text(f"C-{name}: starting check").debug())
 
     # Main loop #
-    for file in files_path:
+    for file in paths:
         try :
-            assert check_file_ext(file), f"{file}\nfile doesn't follow the snake_case convention\nfile contain a letter not in [{valid_char.replace("", ", ")[2:-2]}]"
+            assert check_file_ext(file), f"{file}\nfile name doesn't follow the snake_case convention\n\nfile name contain a letter not in [{valid_char.replace("", ", ")[2:-2]}]"
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error)))

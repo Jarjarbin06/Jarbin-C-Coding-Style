@@ -24,14 +24,13 @@ Text = Console.Text.Text
 
 # Checker #
 def check(
-        *args,
+        paths,
         **kwargs
     ) -> list[RuleError] | None:
 
     kwargs = kwargs["kwargs"]
     errors = []
-    files_path : list[str] = args[0]
-    verbose = kwargs.get("verbose", False)
+    verbose = kwargs.get("verbose", 0)
 
     # Custom variables #
 
@@ -44,7 +43,7 @@ def check(
         ) -> bool:
 
         if not (file.endswith(".c") or file.endswith(".h") or file.endswith("Makefile")):
-            if verbose:
+            if verbose == 2:
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} not checked").debug(), Text("(skip)").info().italic())
             return True
 
@@ -53,7 +52,7 @@ def check(
         f.close()
 
         if (file.endswith(".c") or file.endswith(".h")) and not (
-            "/*\n** EPITECH PROJECT, " in file_str and
+            file_str.startswith("/*\n** EPITECH PROJECT, ") and
             "\n** File description:" in file_str and
             "\n*/\n" in file_str
         ) or file.endswith("Makefile") and not (
@@ -65,7 +64,7 @@ def check(
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} is missing the epitech file header").debug(), Text("(invalid)").error().italic())
             return False
 
-        if verbose:
+        if verbose == 2:
             print(Text(" ").debug(title=True), Text(f"C-{name}: {file} epitech file header valid").debug(), Text("(valid)").valid().italic())
         return True
 
@@ -73,7 +72,7 @@ def check(
         print(Text(" ").debug(title=True), Text(f"C-{name}: starting check").debug())
 
     # Main loop #
-    for file in files_path:
+    for file in paths:
         try :
             assert check_file_ext(file), f"{file}\n doesn't contain the epitech file header\n\n(required for *.c and Makefile)"
 

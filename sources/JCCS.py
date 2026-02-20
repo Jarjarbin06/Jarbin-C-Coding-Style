@@ -21,15 +21,28 @@ from sys import argv, stderr, exit
 from typing import Callable, Any
 from Error import RuleError
 import jarbin_toolkit_console as Console
-from rules.Rules import RULES
 
 print = Console.Console.print
 Text = Console.Text.Text
 Color = Console.ANSI.Color
 Cursor = Console.ANSI.Cursor
 
+Console.init(banner=False)
+
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 84
+
+RULES: dict[str, str | dict[str, str | dict[str, str | Callable | dict[str, Any]]]]
+
+try:
+    from rules import Rules
+
+except Exception:
+    print(Text("Failed to import the rules").error())
+    RULES = {}
+
+else:
+    RULES = Rules.RULES
 
 
 # Program #
@@ -117,6 +130,7 @@ def check(
     ) -> int:
 
     errors: list[RuleError] | None
+    category_error_count: int = 0
     error_count: int = 0
     args : list = paths
     keywords_args: dict
@@ -124,11 +138,14 @@ def check(
 
     for category in rules:
 
+        category_error_count = 0
+
         if arg_verbose:
             print(Text(" ").debug(title=True), Text(f"entering category \"{category}\" ({rules[category]["name"]})").debug())
 
+        len_title_line = len(f"┏━ {rules[category]["name"]} [•STARTED•] ━┓")
+
         if silent != 2:
-            len_title_line = len(f"┏━ {rules[category]["name"]} [•STARTED•] ━┓")
             print("┏━", Text(f"{rules[category]["name"]}").bold(), Text("[•STARTED•]").valid(), "━┓")
             print(Text("┃") + Cursor.move_column(len_title_line - 1) + Text(" ┃"), end="\n")
 
@@ -147,11 +164,11 @@ def check(
                 errors = rules[category][rule]["check"](args, kwargs=keywords_args)
 
                 if errors:
-                    error_count += len(errors)
+                    category_error_count += len(errors)
 
                     if silent != 2:
-                        print(Text("┃"), Text(f"{rule}").bold(), Text(f"({len(errors)})").italic(), end="")
-                        print(Cursor.move_column(len_title_line - 6) + Text("[KO]").error(), Text(" ┃"), end=("\n" if silent else "\n┃\n"))
+                        print(Text("┃").error(), Text(f"{rule}").bold().error(), Text(f"({len(errors)})").italic().error(), end="")
+                        print(Cursor.move_column(len_title_line - 6) + Text("[KO]").error(), Text(" ┃").error(), Text("◀").error(), end=("\n" if silent else "\n┃\n"))
 
                     if not silent:
                         for rule_error in errors:
@@ -161,14 +178,16 @@ def check(
                     print(Text("┃"), Text(f"{rule}").bold(), Text("(no error)").italic(), end="")
                     print(Cursor.move_column(len_title_line - 6) + Text("[OK]").valid(), Text(" ┃"), end=("\n" if silent else "\n"))
 
-            except AssertionError:#Exception:
+            except Exception:
                 print(Text("┃"), Text(f"{rule} [FATAL ERROR]").critic(), file=stderr)
                 print(Text("┃"), Text(f"terminating JCCS").error(), file=stderr)
                 return -1
 
         if silent != 2:
             print(Text("┃") + Cursor.move_column(len_title_line - 1) + Text(" ┃"), end="\n")
-            print("┗━", Text(f"{rules[category]["name"]}").bold(), Text("[••ENDED••]").valid(), "━┛", end="\n\n")
+            print("┗━", Text(f"{rules[category]["name"]}").bold(), (Text("[••ENDED••]").error() if category_error_count else Text("[••ENDED••]").valid()), "━┛", end="\n\n")
+
+        error_count += category_error_count
 
     return error_count
 
@@ -234,6 +253,9 @@ Options:
     {Text("-V").italic() + Color(Color.C_RESET)}, {Text("--verbose").italic() + Color(Color.C_RESET)}
         Enable verbose mode for rules that support it.
 
+    {Text("--super-verbose").italic() + Color(Color.C_RESET)}
+        Enable full verbose mode for rules that support it (can take a lot of place in the terminal).
+
 Exit codes:
     0       Success (no style errors found)
     84      Failure (style errors detected or invalid usage)
@@ -253,10 +275,8 @@ if __name__ == '__main__':
     error_amount : int = 0
     root : str = "."
     arg_silent : int = 0
-    arg_verbose : bool = False
+    arg_verbose : int = 0
     arg_exclude : str = ""
-
-    Console.init(banner=False)
 
     if len(argv) > 1:
 
@@ -268,7 +288,14 @@ if __name__ == '__main__':
                 if argv[index] in ["-V", "--verbose"]:
                     print(Text(" ").debug(title=True), Text(f"Flag: -V/--verbose").debug(), Text("(on)").valid().italic())
 
-                    arg_verbose = True
+                    arg_verbose = 1
+                    index += 1
+
+                elif argv[index] in ["--super-verbose"]:
+                    if arg_verbose:
+                        print(Text(" ").debug(title=True), Text(f"Flag: --super-verbose").debug(), Text("(full)").valid().italic())
+
+                    arg_verbose = 2
                     index += 1
 
                 elif argv[index] in ["-s", "--silent"]:
@@ -342,19 +369,29 @@ Rules selected when calling JCCS
                         else:
                             rule_exist = False
 
-                            for category in RULES:
-                                if argv[index + 1] in RULES[category]:
-                                    new_rules = {
-                                        "CUSTOM": {
-                                            "name": "Custom Rule Selection",
-                                            "info": """
-                                    Rules selected when calling JCCS
-                                    """,
-                                            argv[index + 1]: RULES[category][argv[index + 1]]
+                            if argv[index + 1].startswith("-"):
+                                for category in RULES:
+                                    if argv[index + 1][1:] in RULES[category]:
+                                        RULES[category].pop(argv[index + 1][1:])
+                                        new_rules = RULES
+                                        rule_exist = True
+                                        print("hi")
+                                        break
+
+                            else:
+                                for category in RULES:
+                                    if argv[index + 1] in RULES[category]:
+                                        new_rules = {
+                                            "CUSTOM": {
+                                                "name": "Custom Rule Selection",
+                                                "info": """
+Rules selected with "-R" when calling JCCS
+""",
+                                                argv[index + 1]: RULES[category][argv[index + 1]]
+                                            }
                                         }
-                                    }
-                                    rule_exist = True
-                                    break
+                                        rule_exist = True
+                                        break
 
                             if not rule_exist:
                                 print(Text(f"Rule {argv[index + 1]} doesn't exist (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
@@ -437,8 +474,6 @@ Rules selected when calling JCCS
 
     exit_status = (EXIT_FAILURE if error_amount else EXIT_SUCCESS)
 
-    Console.quit(delete_log=True)
-
     if error_amount > 0:
         print(Text("\n") + Text("JCCS").bold(), "finished", Text("[KO]").error(), Text(f"({error_amount} error)").italic())
     elif error_amount == 0:
@@ -447,3 +482,5 @@ Rules selected when calling JCCS
         print(Text("\n") + Text("JCCS").bold().critic() + Text(" terminated").critic(), end="")
 
     exit(exit_status)
+
+Console.quit(delete_log=True)
