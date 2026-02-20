@@ -9,7 +9,7 @@
 
 # Program info #
 __program__ = "JCCS (Jarbin-C-Coding-Style)"
-__version__ : str = "v0.3"
+__version__ : str = "v0.4"
 __author__ : str = "Jarjarbin06"
 __email__ : str = "nathan.amaraggi@epitech.eu"
 
@@ -95,6 +95,7 @@ def get_files(
     ) -> list[str]:
 
     files: list[str] = []
+    excludes = [(exclude if exclude.endswith("/") else exclude + "/") for exclude in excludes ]
 
     try:
         root = (root if root[-1] == "/" else f"{root}/") if root else "./"
@@ -109,10 +110,11 @@ def get_files(
                 else:
                     do_exclude = False
 
-                    for exclude in excludes.split(" "):
-                        if full_path.split("/")[-1] == exclude:
-                            do_exclude = True
-                            break
+                    if excludes != "/" :
+                        for exclude in excludes:
+                            if exclude in full_path:
+                                do_exclude = True
+                                break
 
                     if not do_exclude:
                         files += get_files(full_path)
