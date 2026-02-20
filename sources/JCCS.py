@@ -15,8 +15,8 @@ __email__ : str = "nathan.amaraggi@epitech.eu"
 
 
 # Program imports #
-from os import listdir
-from os.path import isfile as path_isfile, join as path_join
+from os import walk
+from os.path import join as path_join, abspath, normpath
 from sys import argv, stderr, exit
 from typing import Callable, Any
 from Error import RuleError
@@ -91,36 +91,25 @@ def missing_rule(
 
 def get_files(
         root: str = "./",
-        excludes: str = "",
+        excludes: list[str] | None = None,
     ) -> list[str]:
 
     files: list[str] = []
-    excludes = [(exclude if exclude.endswith("/") else exclude + "/") for exclude in excludes ]
+    root = normpath(abspath(root))
+    excludes = excludes or []
 
-    try:
-        root = (root if root[-1] == "/" else f"{root}/") if root else "./"
+    for current_root, dirs, filenames in walk(root):
 
-        for entry in listdir(root):
-            full_path = path_join(root, entry)
+        dirs[:] = [
+            d for d in dirs
+            if d not in excludes and not d.startswith(".")
+        ]
 
-            if not entry.startswith("."):
-                if path_isfile(full_path):
-                    files.append(full_path)
+        for filename in filenames:
+            if filename.startswith("."):
+                continue
 
-                else:
-                    do_exclude = False
-
-                    if excludes != "/" :
-                        for exclude in excludes:
-                            if exclude in full_path:
-                                do_exclude = True
-                                break
-
-                    if not do_exclude:
-                        files += get_files(full_path)
-
-    except FileNotFoundError:
-        print(Text(f"\"{root}\" does not exist").error(), file=stderr, end="\n\n")
+            files.append(normpath(path_join(current_root, filename)))
 
     return files
 
@@ -341,7 +330,7 @@ if __name__ == '__main__':
                         print(Text(" ").debug(title=True), Text(f"Flag: -e/--exclude").debug(), Text("(used)").info().italic())
 
                     if (index + 1) < len(argv):
-                        arg_exclude += f" {argv[index + 1]}" if arg_exclude else argv[index + 1]
+                        arg_exclude = argv[index + 1]
                         index += 2
 
                     else:
@@ -481,7 +470,7 @@ Rules selected with "-R" when calling JCCS
 
     print(Text("JCCS").bold(), "starting...", start="\n", end="\n\n")
 
-    paths = get_files(root, arg_exclude)
+    paths = get_files(root, arg_exclude.split())
 
     if arg_verbose:
         print(Text(" ").debug(title=True), Text(f"{len(paths)} paths found").debug())
