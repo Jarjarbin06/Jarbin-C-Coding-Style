@@ -35,10 +35,27 @@ install_jccs_zsh() {
             echo -e "$YELLOW JCCS already installed in $zsh$NC"
         else
             echo "export PATH=\"$JCCS_DIR:\$PATH\" #[JCCS] - flag used when uninstalling" >> "$zsh"
-            echo "fpath=(~/.zsh/completions \$fpath) #[JCCS] - flag used when uninstalling" >> "$zsh"
+            echo "fpath=($USER_HOME/.zsh/completions \$fpath) #[JCCS] - flag used when uninstalling" >> "$zsh"
+            echo "autoload -Uz compinit #[JCCS] - flag used when uninstalling" >> "$zsh"
+            echo "compinit #[JCCS] - flag used when uninstalling" >> "$zsh"
             echo "autoload -Uz _JCCS #[JCCS] - flag used when uninstalling" >> "$zsh"
             echo "compdef _JCCS JCCS #[JCCS] - flag used when uninstalling" >> "$zsh"
+            if [[ -d "$USER_HOME/.zsh/" ]]; then
+                echo -e "$GREEN $USER_HOME/.zsh/ found$NC"
+            else
+                echo -e "$YELLOW $USER_HOME/.zsh/ not found$NC"
+                mkdir "$USER_HOME/.zsh/"
+                chmod 755 "$USER_HOME/.zsh/"
+            fi
+            if [[ -d "$USER_HOME/.zsh/completions" ]]; then
+                echo -e "$GREEN $USER_HOME/.zsh/completions found$NC"
+            else
+                echo -e "$YELLOW $USER_HOME/.zsh/completions not found$NC"
+                mkdir "$USER_HOME/.zsh/completions"
+                chmod 755 "$USER_HOME/.zsh/completions"
+            fi
             cp -f "$JCCS_DIR/ressources/zsh-auto-completion" "$USER_HOME/.zsh/completions/_JCCS"
+            chmod +x "$USER_HOME/.zsh/completions/_JCCS"
             echo -e "$GREEN JCCS installed in $zsh$NC"
         fi
     else

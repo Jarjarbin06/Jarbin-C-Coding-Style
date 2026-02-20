@@ -3,31 +3,79 @@
 
 function _JCCS() {
     local state
-    local -a rules categories
+    local -A RULES_BY_CATEGORY
+    local -A VARS_BY_RULE
+    local -a categories rules
 
-    # Known rule categories
+    # Categories
     categories=(
-        'C-A:Advanced'
-        'C-C:Control Structures'
-        'C-F:Functions'
-        'C-G:Global Scope'
-        'C-H:Header Files'
-        'C-L:Layout'
-        'C-O:Files Organization'
-        'C-V:Variables And Types'
+        'A:Advanced'
+        'C:Control Structures'
+        'F:Functions'
+        'G:Global Scope'
+        'H:Header Files'
+        'L:Layout'
+        'O:Files Organization'
+        'V:Variables And Types'
     )
 
-    # Known rules
-    rules=(
-        'G1'
-        'G2'
-        'G3'
-        'G4'
-        'O1'
-        'O2'
-        'O3'
-        'O4'
+    # Rules grouped by category
+    RULES_BY_CATEGORY=(
+        G 'G1 G2 G3 G4 G5 G6'
+        O 'O1 O2 O3 O4'
     )
+
+    # Variables for each rule
+    VARS_BY_RULE=(
+        O1 'UNAUTHORIZED_EXTENSIONS EXCLUDED_FOLDERS'
+        O2 'AUTHORIZED_EXTENSIONS INCLUDED_FOLDERS'
+        O4 'CHECKED_EXTENSIONS VALID_CHARACTERS'
+    )
+
+    # Helper: flatten all rules
+    rules=(${(kv)RULES_BY_CATEGORY})
+    rules=(${(s/ /)rules[@]})  # flatten key-values
+
+    # Completion for multiple -R rules
+    _rules_completion() {
+        local -a typed remaining
+        typed=()
+        # collect rules already typed after -R
+        local i
+        for (( i = 1; i < CURRENT; i++ )); do
+            if [[ ${words[i-1]} == "-R" || ${words[i-1]} == "--rule" ]]; then
+                typed+=("${words[i]}")
+            fi
+        done
+        # remaining = all rules minus typed
+        remaining=(${rules:#${typed[@]}})
+        _describe -t rules 'rules' remaining
+    }
+
+    # Completion for multiple -e paths
+    _exclude_completion() {
+        _files -/
+    }
+
+    # Completion for -S (category -> rule -> variable)
+    _set_completion() {
+        local category rule
+        # First arg after -S is category
+        category=${words[CURRENT]}
+        _describe 'categories' categories
+        # Then rule (filtered by category)
+        if (( CURRENT > 1 )); then
+            local cat=${words[CURRENT-1]}
+            local -a rules_in_cat
+            rules_in_cat=(${(kv)RULES_BY_CATEGORY[$cat]})
+            _describe 'rules' rules_in_cat
+        fi
+        # Then variable (filtered by rule)
+        if (( CURRENT > 2 )); then
+            local rule=${words[CURRENT-1]}
+            _describe 'variables' VARS_BY_RULE[$rule]
+        fi
+    }
 
     _arguments -s -S \
         '(-h --help)'{-h,--help}'[Display help message and exit]' \
@@ -39,26 +87,20 @@ function _JCCS() {
         '--super-verbose[Enable full verbose mode]' \
         '(-r --root)'{-r,--root}'[Define root directory]:directory:_files -/' \
         '(-e --exclude)'{-e,--exclude}'[Exclude a path]:directory:_files -/' \
-        '(-R --rule)'{-R,--rule}'[Run specific rule]:rule:->rule' \
+        '(-R --rule)'{-R,--rule}'[Run specific rule]:rule:->rules' \
         '(-S --set)'{-S,--set}'[Override rule argument]:category:->category' \
         '*::args:->args'
 
     case $state in
-        rule)
-            _describe 'rules' rules
+        rules)
+            _rules_completion
             ;;
         category)
             _describe 'categories' categories
             ;;
         args)
             if [[ ${words[CURRENT-1]} == "-S" || ${words[CURRENT-1]} == "--set" ]]; then
-                if (( CURRENT == 4 )); then
-                    _describe 'rules' rules
-                elif (( CURRENT == 5 )); then
-                    _message "argument name"
-                elif (( CURRENT == 6 )); then
-                    _message "value"
-                fi
+                _set_completion
             fi
             ;;
     esac

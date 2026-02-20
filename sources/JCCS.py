@@ -116,8 +116,8 @@ def get_files(
 def check(
         rules: dict[str, dict[str, Callable[[list[str]], None] | dict[str, Any]]],
         paths: list[str],
-        silent: int,
-        verbose: int
+        silent: int = 0,
+        verbose: int = 0
     ) -> int:
 
     errors: list[RuleError] | None = None
@@ -126,17 +126,19 @@ def check(
     args : list = paths
     keywords_args: dict
     len_title_line: int
+    show_category_boxes = silent != 2
+    show_rule_errors = silent == 0
 
     for category in rules:
 
         category_error_count = 0
 
-        if arg_verbose:
+        if verbose:
             print(Text(" ").debug(title=True), Text(f"entering category \"{category}\" ({rules[category]["name"]})").debug())
 
         len_title_line = len(f"┏━ {rules[category]["name"]} [•STARTED•] ━┓")
 
-        if silent != 2:
+        if show_category_boxes:
             print("┏━", Text(f"{rules[category]["name"]}").bold(), Text("[•STARTED•]").valid(), "━┓")
             print(Text("┃") + Cursor.move_column(len_title_line - 1) + Text(" ┃"), end="\n")
 
@@ -157,30 +159,31 @@ def check(
                 if errors:
                     category_error_count += len(errors)
 
-                    if silent != 2:
+                    if show_category_boxes:
                         print(Text("┃").error(), Text(f"{rule}").bold().error(), Text(f"({len(errors)})").italic().error(), end="")
-                        print(Cursor.move_column(len_title_line - 6) + Text("[KO]").error(), Text(" ┃").error(), Text("◀").error(), end=("\n" if silent else "\n┃\n"))
+                        print(Cursor.move_column(len_title_line - 6) + Text("[KO]").error(), Text(" ┃").error(), Text("◀").error(), end=("\n" if show_rule_errors else "\n┃\n"))
 
-                    if not silent:
+                    if show_rule_errors:
                         for rule_error in errors:
                             print("┃ " + str(rule_error).replace("\n", str(Color(Color.C_RESET) + "\n┃ ")), end="┃\n", file=stderr)
 
-                elif silent != 2:
+                elif show_category_boxes:
                     print(Text("┃"), Text(f"{rule}").bold(), Text("(no error)").italic(), end="")
-                    print(Cursor.move_column(len_title_line - 6) + Text("[OK]").valid(), Text(" ┃"), end=("\n" if silent else "\n"))
+                    print(Cursor.move_column(len_title_line - 6) + Text("[OK]").valid(), Text(" ┃"), end=("\n" if show_rule_errors else "\n"))
 
             except Exception:
-                print(Text("┃"), Text(f"{rule} [FATAL ERROR]").critic(), file=stderr)
-                print(Text("┃"), Text(f"terminating JCCS").error(), file=stderr)
+                if show_category_boxes:
+                    print(Text("┃"), Text(f"{rule} [FATAL ERROR]").critic(), file=stderr)
+                    print(Text("┃"), Text(f"terminating JCCS").error(), file=stderr)
                 return -1
 
-        if silent != 2:
+        if show_category_boxes:
             print(Text("┃") + Cursor.move_column(len_title_line - 1) + Text(" ┃"), end="\n")
             print("┗━", Text(f"{rules[category]["name"]}").bold(), (Text("[••ENDED••]").error() if category_error_count else Text("[••ENDED••]").valid()), "━┛", end="\n\n")
 
         error_count += category_error_count
 
-        if arg_verbose:
+        if verbose:
             print(Text(" ").debug(title=True), Text(f"leaving category \"{category}\" ({rules[category]["name"]})").debug(), Text(f"({category_error_count} errors found)").error() if category_error_count else Text("(no error)").valid())
 
     return error_count
@@ -277,18 +280,18 @@ if __name__ == '__main__':
 
         arg_verbose = 1
 
-    elif "--super-verbose" in argv:
+    if "--super-verbose" in argv:
         print(Text(" ").debug(title=True), Text(f"Flag: --super-verbose").debug(), Text("(full)").valid().italic())
 
         arg_verbose = 2
 
-    elif "-s" in argv or "--silent" in argv:
+    if "-s" in argv or "--silent" in argv:
         if arg_verbose:
             print(Text(" ").debug(title=True), Text(f"Flag: -s/--silent").debug(), Text("(on)").valid().italic())
 
         arg_silent = 1
 
-    elif "--super-silent" in argv:
+    if "--super-silent" in argv:
         if arg_verbose:
             print(Text(" ").debug(title=True), Text(f"Flag: --super-silent").debug(), Text("(full)").valid().italic())
 
@@ -401,6 +404,8 @@ if __name__ == '__main__':
                             if argv[index + 2] in RULES[argv[index + 1]]:
                                 if argv[index + 3] in RULES[argv[index + 1]][argv[index + 2]]["arguments"]:
                                     RULES[argv[index + 1]][argv[index + 2]]["arguments"][argv[index + 3]] = argv[index + 4]
+                                    print(RULES[argv[index + 1]][argv[index + 2]]["arguments"])
+
                                     index += 5
 
                                 else:

@@ -7,56 +7,84 @@ _jccs_completion()
     _init_completion -n : || return
 
     # Available options
-    local opts="
-        -h --help
-        -v --version
-        -r --root
-        -e --exclude
-        -R --rule
-        -S --set
-        -a --show-arguments
-        -s --silent
-        --super-silent
-        -V --verbose
-        --super-verbose
-    "
+    local opts="-h --help -v --version -r --root -e --exclude -R --rule -S --set -a --show-arguments -s --silent --super-silent -V --verbose --super-verbose"
 
-    # Known rule categories (adjust if needed)
-    local categories="C-A C-C C-F C-G C-H C-L C-O C-V"
+    # Categories and rules by category
+    declare -A rules_by_cat
+    rules_by_cat=(
+        [G]="G1 G2 G3 G4 G5 G6"
+        [O]="O1 O2 O3 O4"
+    )
 
-    # Known rules (extend dynamically if needed)
-    local rules="
-        G1 G2 G3
-        O1 O2 O3 O4
-    "
+    # Variables per rule
+    declare -A vars_by_rule
+    vars_by_rule=(
+        [O1]="UNAUTHORIZED_EXTENSIONS EXCLUDED_FOLDERS"
+        [O2]="AUTHORIZED_EXTENSIONS INCLUDED_FOLDERS"
+        [O4]="CHECKED_EXTENSIONS VALID_CHARACTERS"
+    )
 
-    case "$prev" in
-        -r|--root|-e|--exclude)
-            # Path completion
-            _filedir -d
-            return
-            ;;
-        -R|--rule)
-            COMPREPLY=( $(compgen -W "$rules" -- "$cur") )
-            return
-            ;;
-        -S|--set)
-            # First argument after -S → CATEGORY
-            COMPREPLY=( $(compgen -W "$categories" -- "$cur") )
-            return
-            ;;
-    esac
+    # Known categories
+    local categories="A C F G H L O V"
 
-    # Handle deeper arguments for -S
-    if [[ "${words[1]}" == "-S" || "${words[1]}" == "--set" ]]; then
-        case "$cword" in
-            2)
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    # Complete options that take a path
+    if [[ "$prev" == "-r" || "$prev" == "--root" || "$prev" == "-e" || "$prev" == "--exclude" ]]; then
+        COMPREPLY=( $(compgen -d -- "$cur") )
+        return
+    fi
+
+    # Complete rules for -R
+    if [[ "$prev" == "-R" || "$prev" == "--rule" ]]; then
+        local all_rules
+        all_rules=""
+        for r in "${rules_by_cat[@]}"; do
+            all_rules+=" $r"
+        done
+        COMPREPLY=( $(compgen -W "$all_rules" -- "$cur") )
+        return
+    fi
+
+    # Find last -S/--set position (support -S anywhere)
+    local sidx=-1 i offset chosen_cat rules_list rule vars varname prefix
+    for (( i=0; i<=COMP_CWORD; i++ )); do
+        if [[ "${COMP_WORDS[i]}" == "-S" || "${COMP_WORDS[i]}" == "--set" ]]; then
+            sidx=$i
+        fi
+    done
+
+    if (( sidx != -1 )); then
+        offset=$(( COMP_CWORD - sidx ))  # 0 = -S itself, 1 = first arg after -S, etc.
+        case "$offset" in
+            1) # completing category (first argument after -S)
                 COMPREPLY=( $(compgen -W "$categories" -- "$cur") )
                 return
                 ;;
-            3)
-                COMPREPLY=( $(compgen -W "$rules" -- "$cur") )
+            2) # completing rule (second argument after -S)
+                chosen_cat="${COMP_WORDS[$((sidx+1))]}"
+                rules_list="${rules_by_cat[$chosen_cat]}"
+                COMPREPLY=( $(compgen -W "$rules_list" -- "$cur") )
                 return
+                ;;
+            3) # completing variable name (third argument after -S)
+                rule="${COMP_WORDS[$((sidx+2))]}"
+                vars="${vars_by_rule[$rule]}"
+                COMPREPLY=( $(compgen -W "$vars" -- "$cur") )
+                return
+                ;;
+            4) # completing variable value: if current contains '=', complete filenames
+                if [[ "$cur" == *=* ]]; then
+                    varname="${cur%%=*}"
+                    prefix="${cur#*=}"
+                    COMPREPLY=( $(compgen -f -- "$prefix") )
+                    # prepend varname= to each suggestion
+                    for idx in "${!COMPREPLY[@]}"; do
+                        COMPREPLY[$idx]="${varname}=${COMPREPLY[$idx]}"
+                    done
+                    return
+                fi
                 ;;
         esac
     fi
