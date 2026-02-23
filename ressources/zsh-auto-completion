@@ -80,6 +80,7 @@ function _JCCS() {
     _arguments -s -S \
         '(-h --help)'{-h,--help}'[Display help message and exit]' \
         '(-v --version)'{-v,--version}'[Show program name, version and author and exit]' \
+        '--update[Update the program and exit]' \
         '(-a --show-arguments)'{-a,--show-arguments}'[Display all available rules and exit]' \
         '(-s --silent)'{-s,--silent}'[Display only rule summaries]' \
         '--super-silent[Display only final JCCS result]' \

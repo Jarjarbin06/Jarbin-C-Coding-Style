@@ -292,6 +292,9 @@ GENERAL OPTIONS
         Display all available rule categories, rules,
         and their configurable arguments, then exit.
 
+    {Text("--update").italic() + Color(Color.C_RESET)}
+        Update the program and exit.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 PROJECT CONFIGURATION

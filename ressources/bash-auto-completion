@@ -77,7 +77,7 @@ _jccs_completion()
     ALL_RULES="${ALL_RULES#" "}"
 
     # command line options (single-token suggestions)
-    local opts="-h --help -v --version -r --root -e --exclude -R --rule -S --set -a --show-arguments -s --silent --super-silent -V --verbose --super-verbose -j --json-log --no-log"
+    local opts="-h --help -v --version -r --root --update -e --exclude -R --rule -S --set -a --show-arguments -s --silent --super-silent -V --verbose --super-verbose -j --json-log --no-log"
 
     # ----- helpers -----
     # find last index of a flag (both short and long) in COMP_WORDS; returns index or -1

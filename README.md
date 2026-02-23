@@ -110,6 +110,9 @@ JCCS [OPTIONS]
 -a, --show-arguments
     Display available categories, rules and their configurable arguments, then exit.
 
+--exclude
+    Update the program and exit.
+
 -r, --root <path>
     Root directory to analyze. Default: current directory (.)
 
