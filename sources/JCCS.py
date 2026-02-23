@@ -16,11 +16,13 @@ from Error import RuleError
 import jarbin_toolkit_console as Console
 from jarbin_toolkit_log import Log
 import jarbin_toolkit_time as Time
+from subprocess import Popen, DEVNULL
 
 print = Console.Console.print
 Text = Console.Text.Text
 Color = Console.ANSI.Color
 Cursor = Console.ANSI.Cursor
+Animation = Console.Animation
 
 Console.init(banner=False)
 
@@ -82,6 +84,17 @@ def missing_rule(
         **kwargs
     )-> list[RuleError] | None:
     return [RuleError("Unknown Rule", "You tried to run an unknown rule")]
+
+def update_jccs() -> None:
+    spinner = Animation.Spinner.stick(style=Animation.Style(border_left="[", border_right="]")).warning()
+    update_script = f"{abspath(__file__).removesuffix("sources/JCCS.py")}scripts/update-jccs"
+    proc = Popen(["bash", str(update_script)], stdout=DEVNULL, stderr=DEVNULL)
+
+    while proc.poll() is None:
+        spinner()
+        print(Text("JCCS").bold(), ":", Text(f"updating {spinner.render()}").warning() + Cursor.previous(), sleep=0.1)
+
+    print(Text("JCCS").bold(), ":", Text("successfully updated").valid())
 
 def get_files(
         root: str = "./",
@@ -650,6 +663,17 @@ if __name__ == '__main__':
 
                     log.log("VALID", "Flag", f"-a/--show-argument used")
                     show_arguments(RULES)
+                    log.close()
+                    if arg_no_log:
+                        log.delete()
+                    exit(EXIT_SUCCESS)
+
+                elif argv[index] in ["--update"]:
+                    if arg_verbose:
+                        print(Text(" ").debug(title=True), Text(f"Flag: --update").debug(), Text("(used)").info().italic())
+
+                    log.log("VALID", "Flag", f"--update used")
+                    update_jccs()
                     log.close()
                     if arg_no_log:
                         log.delete()

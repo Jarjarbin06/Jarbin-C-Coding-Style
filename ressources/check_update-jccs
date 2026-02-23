@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+# COLORS
+YELLOW="\033[0;33m"
+NC="\033[0m"
+
+# Resolve script directory safely for Bash and Zsh
+if [ -n "$BASH_SOURCE" ]; then
+    # Bash
+    SCRIPT_PATH="${BASH_SOURCE[0]}"
+elif [ -n "$ZSH_VERSION" ]; then
+    # Zsh
+    SCRIPT_PATH="${(%):-%x}"  # %x is script path in Zsh
+else
+    SCRIPT_PATH="$0"
+fi
+
+JCCS_DIR="$( cd "$( dirname "$SCRIPT_PATH" )/.." && pwd )"
+LOCAL_VERSION_FILE="$JCCS_DIR/VERSION"
+CACHE_FILE="$HOME/.cache/jccs_last_check"
+REMOTE_VERSION_URL="https://raw.githubusercontent.com/Jarjarbin06/Jarbin-C-Coding-Style/refs/heads/main/VERSION"
+
+# Only interactive shells
+case $- in
+    *i*) ;;   # interactive, continue
+    *) return 0 2>/dev/null || exit 0;;
+esac
+
+# Check once per day
+if [[ -f "$CACHE_FILE" ]]; then
+    last=$(cat "$CACHE_FILE")
+    now=$(date +%s)
+    (( now - last < 86400 )) && return 0 2>/dev/null || exit 0
+fi
+
+mkdir -p "$HOME/.cache"
+date +%s > "$CACHE_FILE"
+
+# Get versions
+local_ver=$(cat "$LOCAL_VERSION_FILE" 2>/dev/null)
+remote_ver=$(curl -fsL "$REMOTE_VERSION_URL" 2>/dev/null)
+
+if [[ -n "$remote_ver" && "$remote_ver" != "$local_ver" ]]; then
+    echo -e "$YELLOW[JCCS] Update available → $remote_ver (current: $local_ver)$NC"
+    echo "    Run: jccs-update"
+fi
