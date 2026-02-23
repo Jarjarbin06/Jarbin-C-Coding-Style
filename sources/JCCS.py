@@ -21,6 +21,8 @@ from sys import argv, stderr, exit
 from typing import Callable, Any
 from Error import RuleError
 import jarbin_toolkit_console as Console
+from jarbin_toolkit_log import Log
+import jarbin_toolkit_time as Time
 
 print = Console.Console.print
 Text = Console.Text.Text
@@ -33,16 +35,6 @@ EXIT_SUCCESS = 0
 EXIT_FAILURE = 84
 
 RULES: dict[str, str | dict[str, str | dict[str, str | Callable | dict[str, Any]]]]
-
-try:
-    from rules import Rules
-
-except Exception:
-    print(Text("Failed to import the rules").error())
-    RULES = {}
-
-else:
-    RULES = Rules.RULES
 
 
 # Program #
@@ -65,11 +57,14 @@ def show_arguments(
         print(Color(Color.C_FG_DARK) + Text(rules[category]["info"]))
 
         for rule in rules[category]:
+
             if rule in ["name", "info"]:
                 continue
+
             print(Text(rule).bold().underline())
             print(Color(Color.C_FG_DARK) + Text(rules[category][rule]["info"]), end="")
             print(Text("Arguments:"))
+
             if rules[category][rule]["arguments"] :
                 for rule_arg in rules[category][rule]["arguments"]:
                     print("  - " + rule_arg + " : \"" + rules[category][rule]["arguments"][rule_arg] + "\"")
@@ -128,13 +123,25 @@ def check(
     len_title_line: int
     show_category_boxes = silent != 2
     show_rule_errors = silent == 0
+    jccs_timer = Time.StopWatch()
+    category_timer = Time.StopWatch()
+    rule_timer = Time.StopWatch()
+
+    log.log("INFO", "Rule", f"*args set")
+    if log_type == "jar-log":
+        log.comment(f"*args set to paths")
+
+    jccs_timer.start()
 
     for category in rules:
 
+        category_timer.start()
         category_error_count = 0
 
         if verbose:
             print(Text(" ").debug(title=True), Text(f"entering category \"{category}\" ({rules[category]["name"]})").debug())
+
+        log.log("INFO", "Category", f"entering category {repr(category)}")
 
         len_title_line = len(f"┏━ {rules[category]["name"]} [•STARTED•] ━┓")
 
@@ -147,6 +154,10 @@ def check(
                 continue
 
             try:
+
+                log.log("INFO", f"Rule {rule}", f"entering rule {repr(rule)}")
+                log.comment(f"{rule} rule info:{rules[category][rule]["info"]}")
+
                 keywords_args = {}
 
                 for arg in rules[category][rule]["arguments"]:
@@ -154,27 +165,58 @@ def check(
 
                 keywords_args["verbose"] = verbose
 
+                log.log("INFO", f"Rule {rule}", f"**kwargs set")
+                if log_type == "jar-log":
+                    log.comment(f"**kwargs = {repr(keywords_args)}")
+
+                rule_timer.start()
+
+                log.log("INFO", f"Rule {rule}", f"launching {repr(rule)} rule check")
+
                 errors = rules[category][rule]["check"](args, kwargs=keywords_args)
 
+                log.log("INFO", f"Rule {rule}", f"ending {repr(rule)} rule check")
+
+                rule_time = round(rule_timer.elapsed(), 10)
+
+                if verbose:
+                    print(Text(" ").debug(title=True), Text(f"elapsed time for {category}/{rule} : {rule_time}").debug())
+
+                if log_type == "jar-log":
+                    log.comment(f"elapsed time for {category}/{rule} : {rule_time}")
+
+                rule_timer.reset()
+
                 if errors:
+
+                    log.log("INFO", f"Rule {rule}", f"errors found ({len(errors)} errors)")
+
                     category_error_count += len(errors)
 
                     if show_category_boxes:
                         print(Text("┃").error(), Text(f"{rule}").bold().error(), Text(f"({len(errors)})").italic().error(), end="")
-                        print(Cursor.move_column(len_title_line - 6) + Text("[KO]").error(), Text(" ┃").error(), Text("◀").error(), end=("\n" if show_rule_errors else "\n┃\n"))
+                        print(Cursor.move_column(len_title_line - 6) + Text("[KO]").error(), Text(" ┃").error(), Text("◀").error(), end=("\n┃\n" if show_rule_errors else "\n"))
 
-                    if show_rule_errors:
-                        for rule_error in errors:
+                    for rule_error in errors:
+                        log.log("ERROR", f"Rule {rule}", f"{rule_error.message.split("\n")[0]}")
+
+                        if show_rule_errors:
                             print("┃ " + str(rule_error).replace("\n", str(Color(Color.C_RESET) + "\n┃ ")), end="┃\n", file=stderr)
 
                 elif show_category_boxes:
                     print(Text("┃"), Text(f"{rule}").bold(), Text("(no error)").italic(), end="")
                     print(Cursor.move_column(len_title_line - 6) + Text("[OK]").valid(), Text(" ┃"), end=("\n" if show_rule_errors else "\n"))
 
-            except Exception:
+                log.log("INFO", f"Rule {rule}", f"leaving rule {repr(rule)}")
+
+            except Exception as err:
+
+                log.log("CRIT", f"Rule {rule}", f"{str(err)}")
+
                 if show_category_boxes:
                     print(Text("┃"), Text(f"{rule} [FATAL ERROR]").critic(), file=stderr)
                     print(Text("┃"), Text(f"terminating JCCS").error(), file=stderr)
+                    print("┗━", Text(f"{rules[category]["name"]} ").bold(), (Text("[••TERM••]").critic() if category_error_count else Text("[••ENDED••]").valid()), "━┛", end="\n\n")
                 return -1
 
         if show_category_boxes:
@@ -183,18 +225,26 @@ def check(
 
         error_count += category_error_count
 
+        category_time = round(category_timer.elapsed(), 10)
+
         if verbose:
+            print(Text(" ").debug(title=True), Text(f"elapsed time for {category} : {category_time}").debug())
             print(Text(" ").debug(title=True), Text(f"leaving category \"{category}\" ({rules[category]["name"]})").debug(), Text(f"({category_error_count} errors found)").error() if category_error_count else Text("(no error)").valid())
 
+        if log_type == "jar-log":
+            log.comment(f"elapsed time for {category} : {category_time}")
+
+        category_timer.reset()
+
+    jccs_time = round(jccs_timer.elapsed(), 10)
+
+    if verbose:
+        print(Text(" ").debug(title=True), Text(f"total elapsed time : {jccs_time}").debug())
+
+    if log_type == "jar-log":
+        log.comment(f"total elapsed time : {jccs_time}")
+
     return error_count
-
-def set_var(
-        argv : list[str]
-    ) -> None :
-
-    index: int = 0
-    while index < len(argv):
-        index += 1
 
 def print_help(
     )-> None:
@@ -253,6 +303,12 @@ Options:
     {Text("--super-verbose").italic() + Color(Color.C_RESET)}
         Enable full verbose mode for rules that support it (can take a lot of place in the terminal).
 
+    {Text("-j").italic() + Color(Color.C_RESET)}, {Text("--json-log").italic() + Color(Color.C_RESET)}
+        Switch log file to JSON (instead of JAR-LOG).
+
+    {Text("--no-log").italic() + Color(Color.C_RESET)}
+        Delete log file at the end of the program.
+
 Exit codes:
     0       Success (no style errors found)
     84      Failure (style errors detected or invalid usage)
@@ -274,14 +330,50 @@ if __name__ == '__main__':
     arg_silent : int = 0
     arg_verbose : int = 0
     arg_exclude : str = ""
+    log_type : str = "jar-log"
+    arg_no_log : bool = False
+
+    if Log.exist("."):
+        log = Log(".", "JCCS")
+        log.delete()
+
+    log = Log(".", "JCCS")
+
+    try:
+        from rules import Rules
+
+    except Exception:
+        print(Text("Failed to import the rules").error())
+        RULES = {}
+
+    else:
+        RULES = Rules.RULES
+
+    if "-j" in argv or "--json-log" in argv:
+        if arg_verbose:
+            print(Text(" ").debug(title=True), Text(f"Flag: -j/--json-log").debug(), Text("(on)").info().italic())
+
+        log_type = "json"
+        log.delete()
+        log = Log(".", "JCCS", True)
+
+    if "--no-log" in argv:
+        if arg_verbose:
+            print(Text(" ").debug(title=True), Text(f"Flag: --no-log").debug(), Text("(on)").info().italic())
+
+        arg_no_log = True
 
     if "-V" in argv or "--verbose" in argv:
         print(Text(" ").debug(title=True), Text(f"Flag: -V/--verbose").debug(), Text("(on)").valid().italic())
+
+        log.log("VALID", "Flag", "-V/--verbose activated")
 
         arg_verbose = 1
 
     if "--super-verbose" in argv:
         print(Text(" ").debug(title=True), Text(f"Flag: --super-verbose").debug(), Text("(full)").valid().italic())
+
+        log.log("VALID", "Flag", "--super-verbose activated")
 
         arg_verbose = 2
 
@@ -289,11 +381,15 @@ if __name__ == '__main__':
         if arg_verbose:
             print(Text(" ").debug(title=True), Text(f"Flag: -s/--silent").debug(), Text("(on)").valid().italic())
 
+        log.log("VALID", "Flag", "-s/--silent activated")
+
         arg_silent = 1
 
     if "--super-silent" in argv:
         if arg_verbose:
             print(Text(" ").debug(title=True), Text(f"Flag: --super-silent").debug(), Text("(full)").valid().italic())
+
+        log.log("VALID", "Flag", "--super-silent activated")
 
         arg_silent = 2
 
@@ -304,7 +400,13 @@ if __name__ == '__main__':
         while index < len(argv):
 
             if argv[index].startswith("-"):
-                if argv[index] in ["-V", "--verbose"]:
+                if argv[index] in ["-j", "--json-log"]:
+                    index += 1
+
+                elif argv[index] in ["--no-log"]:
+                    index += 1
+
+                elif argv[index] in ["-V", "--verbose"]:
                     index += 1
 
                 elif argv[index] in ["--super-verbose"]:
@@ -323,9 +425,14 @@ if __name__ == '__main__':
                     if (index + 1) < len(argv):
                         root = argv[index + 1]
                         index += 2
+                        log.log("VALID", "Flag", f"-r/--root set to {repr(root)}")
 
                     else:
                         print(Text(f"missing argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                        log.log("ERROR", "Flag", f"-r/--root failed to set to new value")
+                        log.close()
+                        if arg_no_log:
+                            log.delete()
                         exit(EXIT_FAILURE)
 
                 elif argv[index] in ["-e", "--exclude"]:
@@ -335,9 +442,14 @@ if __name__ == '__main__':
                     if (index + 1) < len(argv):
                         arg_exclude = argv[index + 1]
                         index += 2
+                        log.log("VALID", "Flag", f"-e/--exclude set to {repr(arg_exclude)}")
 
                     else:
                         print(Text(f"missing argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                        log.log("ERROR", "Flag", f"-e/--exclude failed to set to new value")
+                        log.close()
+                        if arg_no_log:
+                            log.delete()
                         exit(EXIT_FAILURE)
 
 
@@ -363,6 +475,10 @@ if __name__ == '__main__':
 
                         if not collected_rules:
                             print(Text(f"missing argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                            log.log("ERROR", "Flag", f"-R/--rule failed to set to new value")
+                            log.close()
+                            if arg_no_log:
+                                log.delete()
                             exit(EXIT_FAILURE)
 
                         new_rules = {
@@ -384,15 +500,25 @@ if __name__ == '__main__':
                                     break
 
                             if not rule_exist:
-                                print(Text(
-                                    f"Rule {arg} doesn't exist (\"{argv[index]}\" near position {index + 1})").error(), file=stderr)
+                                print(Text(f"Rule {arg} doesn't exist (\"{argv[index]}\" near position {index + 1})").error(), file=stderr)
+                                log.log("ERROR", "Flag", f"-R/--rule failed to set to new value")
+                                log.close()
+                                if arg_no_log:
+                                    log.delete()
                                 exit(EXIT_FAILURE)
 
                         RULES = new_rules
+
+                        log.log("VALID", "Flag", f"-R/--rule new rules set")
+
                         index = i
 
                     else:
                         print(Text(f"missing argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                        log.log("ERROR", "Flag", f"-R/--rule failed to set to new value")
+                        log.close()
+                        if arg_no_log:
+                            log.delete()
                         exit(EXIT_FAILURE)
 
                 elif argv[index] in ["-S", "--set"]:
@@ -403,6 +529,8 @@ if __name__ == '__main__':
                         if argv[index + 1] in RULES:
                             if argv[index + 2] in RULES[argv[index + 1]]:
                                 if argv[index + 3] in RULES[argv[index + 1]][argv[index + 2]]["arguments"]:
+                                    log.log("VALID", "Flag", f"-S/--set {repr(argv[index + 1])}/{repr(argv[index + 2])}/{repr(argv[index + 3])} set to {repr(argv[index + 4])}")
+
                                     RULES[argv[index + 1]][argv[index + 2]]["arguments"][argv[index + 3]] = argv[index + 4]
                                     print(RULES[argv[index + 1]][argv[index + 2]]["arguments"])
 
@@ -410,39 +538,70 @@ if __name__ == '__main__':
 
                                 else:
                                     print(Text(f"{argv[index + 2]} in {argv[index + 1]} doesn't have argument {argv[index + 3]} (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                                    log.log("ERROR", "Flag", f"-S/--set failed to set to new value")
+                                    log.close()
+                                    if arg_no_log:
+                                        log.delete()
                                     exit(EXIT_FAILURE)
 
                             else:
                                 print(Text(f"Rule {argv[index + 2]} doesn't exist in {argv[index + 1]} (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                                log.log("ERROR", "Flag", f"-S/--set failed to set to new value")
+                                log.close()
+                                if arg_no_log:
+                                    log.delete()
                                 exit(EXIT_FAILURE)
 
                         else:
                             print(Text(f"Category {argv[index + 1]} doesn't exist (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                            log.log("ERROR", "Flag", f"-S/--set failed to set to new value")
+                            log.close()
+                            if arg_no_log:
+                                log.delete()
                             exit(EXIT_FAILURE)
 
                     else:
                         print(Text(f"missing argument(s) (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                        log.log("ERROR", "Flag", f"-S/--set failed to set to new value")
+                        log.close()
+                        if arg_no_log:
+                            log.delete()
                         exit(EXIT_FAILURE)
 
                 elif argv[index] in ["-h", "--help"]:
                     if arg_verbose:
                         print(Text(" ").debug(title=True), Text(f"Flag: -h/--help").debug(), Text("(used)").info().italic())
 
+                    log.log("VALID", "Flag", f"-h/--help used")
+
                     print_help()
+                    log.close()
+                    if arg_no_log:
+                        log.delete()
                     exit(EXIT_SUCCESS)
 
                 elif argv[index] in ["-v", "--version"]:
                     if arg_verbose:
                         print(Text(" ").debug(title=True), Text(f"Flag: -v/--version").debug(), Text("(used)").info().italic())
 
+                    log.log("VALID", "Flag", f"-v/--version used")
+
                     print(Text(__program__).bold(), Text(__version__).italic(), Text(f"by {__author__}"))
+                    log.close()
+                    if arg_no_log:
+                        log.delete()
                     exit(EXIT_SUCCESS)
 
                 elif argv[index] in ["-a", "--show-arguments"]:
                     if arg_verbose:
                         print(Text(" ").debug(title=True), Text(f"Flag: -a/--show-arguments").debug(), Text("(used)").info().italic())
 
+                    log.log("VALID", "Flag", f"-a/--show-argument used")
+
                     show_arguments(RULES)
+                    log.close()
+                    if arg_no_log:
+                        log.delete()
                     exit(EXIT_SUCCESS)
 
                 else:
@@ -450,13 +609,19 @@ if __name__ == '__main__':
                         print(Text(" ").debug(title=True), Text(f"Flag: invalid").debug(), Text("(error)").error().italic())
 
                     print(Text(f"invalid argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                    log.log("ERROR", "Flag", f"invalid flag {repr({argv[index]})}")
+                    log.close()
+                    if arg_no_log:
+                        log.delete()
                     exit(EXIT_FAILURE)
 
             else:
                 print(Text(f"invalid argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                log.log("ERROR", "Arg", f"invalid argument {repr({argv[index]})}")
+                log.close()
+                if arg_no_log:
+                    log.delete()
                 exit(EXIT_FAILURE)
-
-        set_var(argv[1:])
 
     if arg_verbose:
         print(Text(" ").debug(title=True), Text(f"starting JCCS").debug())
@@ -465,6 +630,8 @@ if __name__ == '__main__':
 
     paths = get_files(root, arg_exclude.split())
 
+    log.log("INFO", "Program", f"{len(paths)} paths found")
+
     if arg_verbose:
         print(Text(" ").debug(title=True), Text(f"{len(paths)} paths found").debug())
 
@@ -472,7 +639,11 @@ if __name__ == '__main__':
         if arg_verbose:
             print(Text(" ").debug(title=True), Text(f"starting check").debug())
 
+        log.log("INFO", "Program", f"start check")
+
         error_amount = check(RULES, paths, silent=arg_silent, verbose=arg_verbose)
+
+        log.log("INFO", "Program", "check finished" + (f" with {error_amount} errors" if error_amount > 0 else " (fatal error)"))
 
         if arg_verbose:
             print(Text(" ").debug(title=True), Text(f"ending check").debug())
@@ -481,13 +652,20 @@ if __name__ == '__main__':
 
     if error_amount > 0:
         print(Text("JCCS").bold(), "finished", Text("[KO]").error(), Text(f"({error_amount} error)").italic())
+        log.log("ERROR", "Program", f"JCCS terminated with {error_amount} error")
     elif error_amount == 0:
         print(Text("JCCS").bold(), "finished", Text("[OK]").valid())
+        log.log("VALID", "Program", f"JCCS terminated with success")
     else:
-        print(Text("JCCS").bold().critic() + Text(" terminated").critic(), end="")
+        print(Text("JCCS").bold().critic() + Text(" terminated").critic())
+        log.log("CRIT", "Program", f"JCCS terminated due to an internal error")
 
     if arg_verbose:
         print(Text(" ").debug(title=True), Text(f"ending JCCS").debug())
+
+    log.close()
+    if arg_no_log:
+        log.delete()
 
     exit(exit_status)
 

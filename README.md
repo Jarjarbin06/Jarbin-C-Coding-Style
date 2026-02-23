@@ -139,7 +139,10 @@ JCCS [OPTIONS]
     Display only JCCS result (hide detailed error output and summaries).
 
 -V, --verbose
-    Enable verbose mode for supported rules.
+    Enable minimal verbose mode for supported rules.
+
+--super-verbose
+    Enable full verbose mode for supported rules.
 ```
 
 ---

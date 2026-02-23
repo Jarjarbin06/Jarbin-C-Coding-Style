@@ -89,6 +89,8 @@ function _JCCS() {
         '(-e --exclude)'{-e,--exclude}'[Exclude a path]:directory:_files -/' \
         '(-R --rule)'{-R,--rule}'[Run specific rule]:rule:->rules' \
         '(-S --set)'{-S,--set}'[Override rule argument]:category:->category' \
+        '(-j --jar-log)'{-j,--jar-log}'[Switch logging to JSON]' \
+        '--no-log[Delete log at exit]' \
         '*::args:->args'
 
     case $state in

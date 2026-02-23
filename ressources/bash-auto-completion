@@ -7,7 +7,7 @@ _jccs_completion()
     _init_completion -n : || return
 
     # Available options
-    local opts="-h --help -v --version -r --root -e --exclude -R --rule -S --set -a --show-arguments -s --silent --super-silent -V --verbose --super-verbose"
+    local opts="-h --help -v --version -r --root -e --exclude -R --rule -S --set -a --show-arguments -s --silent --super-silent -V --verbose --super-verbose -j --json-log --no-log"
 
     # Categories and rules by category
     declare -A rules_by_cat

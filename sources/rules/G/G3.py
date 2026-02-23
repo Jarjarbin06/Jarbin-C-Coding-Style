@@ -42,7 +42,7 @@ def get_global_error(
         if (not is_a_comment) and file_list_str[index].replace(" ", "") != "\n":
             if file_list_str[index].replace(" ", "").startswith("#end"):
                 indentation_level -= 1
-            if file_list_str[index].replace(" ", "")[0] == "#" and not file_list_str[index].startswith("    " * indentation_level):
+            if len(file_list_str[index].replace(" ", "")) > 0 and file_list_str[index].replace(" ", "")[0] == "#" and not file_list_str[index].startswith("    " * indentation_level):
                 return f"line number {index + 1}:\n---\n{file_list_str[index]}{"" if file_list_str[index].endswith("\n") else "\n"}---\nindentation level must be {indentation_level}"
             if file_list_str[index].replace(" ", "").startswith("#if"):
                 indentation_level += 1

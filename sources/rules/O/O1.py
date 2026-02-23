@@ -48,6 +48,7 @@ def check(
 
         for folder in excluded_folders.split(" ") :
             if f"/{folder.upper()}/" in file.upper() or f"{folder.upper()}/" in file.upper() :
+
                 if verbose == 2:
                     print(Text(" ").debug(title=True), Text(f"C-{name}: {file} in EXCLUDED_FOLDERS (\"{folder}\")").debug(), Text("(skip)").info().italic())
                 return True
@@ -57,14 +58,17 @@ def check(
         if "." in file_ext :
             file_ext = file_ext.split(".")[-1]
         else:
+
             if verbose == 2:
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} doesn't have an extension").debug(), Text("(skip)").info().italic())
             return True
 
         if file_ext in unauth_ext.split(" ") :
+
             if verbose:
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} extension not allowed").debug(), Text("(invalid)").error().italic())
             return False
+
         if verbose == 2:
             print(Text(" ").debug(title=True), Text(f"C-{name}: {file} extension allowed").debug(), Text("(valid)").valid().italic())
         return True

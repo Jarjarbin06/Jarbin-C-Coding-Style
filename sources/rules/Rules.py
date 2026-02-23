@@ -12,8 +12,6 @@ import jarbin_toolkit_console as Console
 print = Console.Console.print
 Text = Console.Text.Text
 
-Console.init(banner=False)
-
 # Rules #
 RULES: dict[str, str | dict[str, str | dict[str, str | Callable | dict[str, Any]]]] = {}
 
