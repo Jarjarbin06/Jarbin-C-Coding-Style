@@ -18,7 +18,8 @@ install_jccs_bash() {
         if grep -q "\[JCCS\]" "$bash"; then
             echo -e "$YELLOW JCCS already installed in $bash$NC"
         else
-            echo "export PATH=\"$JCCS_DIR:\$PATH\" #[JCCS] - flag used when uninstalling" >> "$bash"
+            echo "export PATH=\"$JCCS_DIR:\$PATH\" #[JCCS]" >> "$bash"
+            echo "[ -f \"$JCCS_DIR/ressources/jccs-update-check.sh\" ] && source \"$JCCS_DIR/ressources/jccs-update-check.sh\" #[JCCS]" >> "$bash"
             cp -f "$JCCS_DIR/ressources/bash-auto-completion" "/etc/bash_completion.d/jccs"
             echo -e "$GREEN JCCS installed in $bash$NC"
         fi
@@ -34,7 +35,8 @@ install_jccs_zsh() {
         if grep -q "\[JCCS\]" "$zsh"; then
             echo -e "$YELLOW JCCS already installed in $zsh$NC"
         else
-            echo "export PATH=\"$JCCS_DIR:\$PATH\" #[JCCS] - flag used when uninstalling" >> "$zsh"
+            echo "export PATH=\"$JCCS_DIR:\$PATH\" #[JCCS]" >> "$zsh"
+            echo "[ -f \"$JCCS_DIR/ressources/jccs-update-check.sh\" ] && source \"$JCCS_DIR/ressources/jccs-update-check.sh\" #[JCCS]" >> "$zsh"
             echo "fpath=($USER_HOME/.zsh/completions \$fpath) #[JCCS] - flag used when uninstalling" >> "$zsh"
             echo "autoload -Uz compinit #[JCCS] - flag used when uninstalling" >> "$zsh"
             echo "compinit #[JCCS] - flag used when uninstalling" >> "$zsh"

@@ -7,13 +7,6 @@
 #############################
 
 
-# Program info #
-__program__ = "JCCS (Jarbin-C-Coding-Style)"
-__version__ : str = "v0.6"
-__author__ : str = "Jarjarbin06"
-__email__ : str = "nathan.amaraggi@epitech.eu"
-
-
 # Program imports #
 from os import walk
 from os.path import join as path_join, abspath, normpath
@@ -35,6 +28,13 @@ EXIT_SUCCESS = 0
 EXIT_FAILURE = 84
 EXIT_FATAL = 1
 RULES: dict[str, str | dict[str, str | dict[str, str | Callable | dict[str, Any]]]]
+
+
+# Program info #
+__program__ = "JCCS (Jarbin-C-Coding-Style)"
+__version__ : str = open(abspath(__file__).removesuffix("sources/JCCS.py") + "VERSION", 'r').read()
+__author__ : str = "Jarjarbin06"
+__email__ : str = "nathan.amaraggi@epitech.eu"
 
 
 # Program #
