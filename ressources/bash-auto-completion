@@ -1,99 +1,264 @@
 #!/bin/bash
+
 # Bash completion for JCCS (Jarbin-C-Coding-Style)
+# Improved, maintainable and extensible completion script.
+# Features:
+# - multi-value completion for -R/--rule and -e/--exclude (keeps suggesting after one value)
+# - context-aware completion for -S/--set (category -> rule -> argument -> value)
+# - directory completion for -r/--root and -e/--exclude
+# - resilient to flag ordering and repeated flags
+# - easy to update RULES_BY_CAT and VARS_BY_RULE below
 
 _jccs_completion()
 {
+    # prefer _init_completion if available (bash-completion), otherwise fallback
+    if type _init_completion >/dev/null 2>&1; then
+        _init_completion -n : || return
+    else
+        # fallback minimal initialisation
+        local cur prev words cword
+        cur="${COMP_WORDS[COMP_CWORD]}"
+        prev="${COMP_WORDS[COMP_CWORD-1]}"
+        words=("${COMP_WORDS[@]}")
+        cword=$COMP_CWORD
+    fi
+    # ensure local scope
     local cur prev words cword
-    _init_completion -n : || return
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    words=("${COMP_WORDS[@]}")
+    cword=$COMP_CWORD
 
-    # Available options
-    local opts="-h --help -v --version -r --root -e --exclude -R --rule -S --set -a --show-arguments -s --silent --super-silent -V --verbose --super-verbose -j --json-log --no-log"
-
-    # Categories and rules by category
-    declare -A rules_by_cat
-    rules_by_cat=(
-        [G]="G1 G2 G3 G4 G5 G6"
-        [O]="O1 O2 O3 O4"
+    # ----- Config: categories, rules, variables (easy to update) -----
+    # Category keys (short) and human-readable list for -S category completion
+    local categories="A C F G H L O V"
+    declare -A CAT_LONGNAME
+    CAT_LONGNAME=(
+        [A]="Advanced"
+        [C]="Control Structures"
+        [F]="Functions"
+        [G]="Global Scope"
+        [H]="Header Files"
+        [L]="Layout"
+        [O]="Files Organization"
+        [V]="Variables And Types"
     )
 
-    # Variables per rule
-    declare -A vars_by_rule
-    vars_by_rule=(
+    # Rules grouped by category (space-separated strings)
+    declare -A RULES_BY_CAT
+    RULES_BY_CAT=(
+        [A]=""
+        [C]=""
+        [F]=""
+        [G]="G1 G2 G3 G4 G5 G6"
+        [H]=""
+        [L]=""
+        [O]="O1 O2 O3 O4"
+        [V]=""
+    )
+
+    # Variables (arguments) supported per rule
+    declare -A VARS_BY_RULE
+    VARS_BY_RULE=(
         [O1]="UNAUTHORIZED_EXTENSIONS EXCLUDED_FOLDERS"
         [O2]="AUTHORIZED_EXTENSIONS INCLUDED_FOLDERS"
         [O4]="CHECKED_EXTENSIONS VALID_CHARACTERS"
     )
 
-    # Known categories
-    local categories="A C F G H L O V"
-
-    cur="${COMP_WORDS[COMP_CWORD]}"
-    prev="${COMP_WORDS[COMP_CWORD-1]}"
-
-    # Complete options that take a path
-    if [[ "$prev" == "-r" || "$prev" == "--root" || "$prev" == "-e" || "$prev" == "--exclude" ]]; then
-        COMPREPLY=( $(compgen -d -- "$cur") )
-        return
-    fi
-
-    # Complete rules for -R
-    if [[ "$prev" == "-R" || "$prev" == "--rule" ]]; then
-        local all_rules
-        all_rules=""
-        for r in "${rules_by_cat[@]}"; do
-            all_rules+=" $r"
-        done
-        COMPREPLY=( $(compgen -W "$all_rules" -- "$cur") )
-        return
-    fi
-
-    # Find last -S/--set position (support -S anywhere)
-    local sidx=-1 i offset chosen_cat rules_list rule vars varname prefix
-    for (( i=0; i<=COMP_CWORD; i++ )); do
-        if [[ "${COMP_WORDS[i]}" == "-S" || "${COMP_WORDS[i]}" == "--set" ]]; then
-            sidx=$i
+    # flat list of all rules (space-separated)
+    local ALL_RULES=""
+    local k
+    for k in "${!RULES_BY_CAT[@]}"; do
+        if [[ -n "${RULES_BY_CAT[$k]}" ]]; then
+            ALL_RULES="${ALL_RULES} ${RULES_BY_CAT[$k]}"
         fi
     done
+    # trim leading space
+    ALL_RULES="${ALL_RULES#" "}"
 
-    if (( sidx != -1 )); then
-        offset=$(( COMP_CWORD - sidx ))  # 0 = -S itself, 1 = first arg after -S, etc.
-        case "$offset" in
-            1) # completing category (first argument after -S)
-                COMPREPLY=( $(compgen -W "$categories" -- "$cur") )
+    # command line options (single-token suggestions)
+    local opts="-h --help -v --version -r --root -e --exclude -R --rule -S --set -a --show-arguments -s --silent --super-silent -V --verbose --super-verbose -j --json-log --no-log"
+
+    # ----- helpers -----
+    # find last index of a flag (both short and long) in COMP_WORDS; returns index or -1
+    _last_index_of_flag() {
+        local flag_short="$1"
+        local flag_long="$2"
+        local idx=-1
+        local i
+        for (( i=1; i<${#COMP_WORDS[@]}; i++ )); do
+            if [[ "${COMP_WORDS[i]}" == "${flag_short}" || "${COMP_WORDS[i]}" == "${flag_long}" ]]; then
+                idx=$i
+            fi
+        done
+        echo "$idx"
+    }
+
+    # collect tokens between (idx+1) and the next token that starts with '-' (exclusive)
+    # arguments: start_index -> outputs tokens as a space-separated string
+    _collect_segment_tokens() {
+        local start=$1
+        local out=""
+        local i
+        for (( i=start+1; i<${#COMP_WORDS[@]}; i++ )); do
+            local w="${COMP_WORDS[i]}"
+            if [[ "$w" == -* ]]; then
+                break
+            fi
+            out="${out} ${w}"
+        done
+        out="${out#" "}"
+        echo "$out"
+    }
+
+    # check whether the cursor is currently inside the segment started by flag at index idx
+    # i.e., no other option token occurs between idx+1 and cursor position
+    _cursor_in_segment() {
+        local idx=$1
+        if (( idx == -1 )); then
+            echo 0
+            return
+        fi
+        local i
+        for (( i=idx+1; i<COMP_CWORD; i++ )); do
+            if [[ "${COMP_WORDS[i]}" == -* ]]; then
+                echo 0
                 return
-                ;;
-            2) # completing rule (second argument after -S)
-                chosen_cat="${COMP_WORDS[$((sidx+1))]}"
-                rules_list="${rules_by_cat[$chosen_cat]}"
-                COMPREPLY=( $(compgen -W "$rules_list" -- "$cur") )
-                return
-                ;;
-            3) # completing variable name (third argument after -S)
-                rule="${COMP_WORDS[$((sidx+2))]}"
-                vars="${vars_by_rule[$rule]}"
-                COMPREPLY=( $(compgen -W "$vars" -- "$cur") )
-                return
-                ;;
-            4) # completing variable value: if current contains '=', complete filenames
-                if [[ "$cur" == *=* ]]; then
-                    varname="${cur%%=*}"
-                    prefix="${cur#*=}"
-                    COMPREPLY=( $(compgen -f -- "$prefix") )
-                    # prepend varname= to each suggestion
-                    for idx in "${!COMPREPLY[@]}"; do
-                        COMPREPLY[$idx]="${varname}=${COMPREPLY[$idx]}"
-                    done
-                    return
-                fi
-                ;;
-        esac
+            fi
+        done
+        # if cursor is immediately after the flag, COMP_CWORD == idx+1 => still in segment
+        echo 1
+    }
+
+    # ----- handle -r/--root (single directory) -----
+    if [[ "$prev" == "-r" || "$prev" == "--root" ]]; then
+        COMPREPLY=( $(compgen -d -- "$cur") )
+        return 0
     fi
 
-    # Default: complete options
+    # ----- handle -e / --exclude (multiple directories, repeated) -----
+    local eidx
+    eidx=$(_last_index_of_flag "-e" "--exclude")
+    if [[ $(_cursor_in_segment "$eidx") -eq 1 ]]; then
+        # complete directories while inside an -e segment
+        if [[ "$cur" == -* ]]; then
+            # allow completing options if user starts a new flag
+            COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
+        else
+            COMPREPLY=( $(compgen -d -- "$cur") )
+        fi
+        return 0
+    fi
+
+    # ----- handle -R / --rule (multiple rules, repeated) -----
+    local ridx
+    ridx=$(_last_index_of_flag "-R" "--rule")
+    if [[ $(_cursor_in_segment "$ridx") -eq 1 ]]; then
+
+        # 🔥 If user starts typing a new option, suggest flags instead of rules
+        if [[ "$cur" == -* ]]; then
+            COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
+            return 0
+        fi
+
+        # collect already typed rules in this segment
+        local typed
+        typed="$(_collect_segment_tokens "$ridx")"
+
+        # build suggestions = ALL_RULES - typed
+        local suggestion_list=""
+        local rule
+        for rule in ${ALL_RULES}; do
+            local used=0
+            for t in ${typed}; do
+                if [[ "$t" == "$rule" ]]; then
+                    used=1
+                    break
+                fi
+            done
+            if (( used == 0 )); then
+                suggestion_list="${suggestion_list} ${rule}"
+            fi
+        done
+        suggestion_list="${suggestion_list#" "}"
+        COMPREPLY=( $(compgen -W "$suggestion_list" -- "$cur") )
+        return 0
+    fi
+
+    # ----- handle -S / --set (category -> rule -> arg -> value) -----
+    local sidx
+    sidx=$(_last_index_of_flag "-S" "--set")
+    if [[ $(_cursor_in_segment "$sidx") -eq 1 ]]; then
+        # offset: 1 -> completing CATEGORY ; 2 -> RULE ; 3 -> ARG ; 4 -> VALUE
+        local offset=$(( COMP_CWORD - sidx ))
+        if (( offset == 1 )); then
+            # suggest category short keys with descriptions (bash can't show descriptions in compgen)
+            COMPREPLY=( $(compgen -W "${categories}" -- "$cur") )
+            return 0
+        elif (( offset == 2 )); then
+            # complete rules for chosen category
+            local chosen_cat="${COMP_WORDS[sidx+1]}"
+            # if user typed long name (unlikely), try to map back to short key
+            if [[ -z "${RULES_BY_CAT[$chosen_cat]}" ]]; then
+                # map long name to short
+                for k in ${categories}; do
+                    if [[ "${CAT_LONGNAME[$k]}" == "$chosen_cat" ]]; then
+                        chosen_cat="$k"
+                        break
+                    fi
+                done
+            fi
+            local rules_list="${RULES_BY_CAT[$chosen_cat]}"
+            COMPREPLY=( $(compgen -W "$rules_list" -- "$cur") )
+            return 0
+        elif (( offset == 3 )); then
+            # complete argument names for chosen rule
+            local chosen_rule="${COMP_WORDS[sidx+2]}"
+            local vars="${VARS_BY_RULE[$chosen_rule]}"
+            COMPREPLY=( $(compgen -W "$vars" -- "$cur") )
+            return 0
+        else
+            # offset >= 4 -> completing VALUE: suggest files/directories
+            # If user begins a new '-' while still considered "in this segment",
+            # switch to offering flags (the change that fixes your reported case).
+            if [[ "$cur" == -* ]]; then
+                COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
+            else
+                # don't attempt to parse key=value; just offer path completions
+                COMPREPLY=( $(compgen -f -- "$cur") )
+            fi
+            return 0
+        fi
+    fi
+
+    # ----- when previous token is an option that expects immediate completion -----
+    if [[ "$prev" == "-R" || "$prev" == "--rule" ]]; then
+        COMPREPLY=( $(compgen -W "${ALL_RULES}" -- "$cur") )
+        return 0
+    fi
+    if [[ "$prev" == "-e" || "$prev" == "--exclude" ]]; then
+        COMPREPLY=( $(compgen -d -- "$cur") )
+        return 0
+    fi
+    if [[ "$prev" == "-r" || "$prev" == "--root" ]]; then
+        COMPREPLY=( $(compgen -d -- "$cur") )
+        return 0
+    fi
+    if [[ "$prev" == "-S" || "$prev" == "--set" ]]; then
+        # complete category after -S
+        COMPREPLY=( $(compgen -W "${categories}" -- "$cur") )
+        return 0
+    fi
+
+    # ----- default: complete options if current word starts with '-' -----
     if [[ "$cur" == -* ]]; then
         COMPREPLY=( $(compgen -W "$opts" -- "$cur") )
-        return
+        return 0
     fi
+
+    # ----- fallback: filenames -----
+    COMPREPLY=( $(compgen -f -- "$cur") )
+    return 0
 }
 
 complete -F _jccs_completion JCCS

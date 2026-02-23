@@ -9,7 +9,7 @@
 
 # Program info #
 __program__ = "JCCS (Jarbin-C-Coding-Style)"
-__version__ : str = "v0.5"
+__version__ : str = "v0.6"
 __author__ : str = "Jarjarbin06"
 __email__ : str = "nathan.amaraggi@epitech.eu"
 
@@ -33,6 +33,7 @@ Console.init(banner=False)
 
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 84
+EXIT_FATAL = 1
 RULES: dict[str, str | dict[str, str | dict[str, str | Callable | dict[str, Any]]]]
 
 
@@ -153,7 +154,8 @@ def check(
             try:
 
                 log.log("INFO", f"Rule {rule}", f"entering rule {repr(rule)}")
-                log.comment(f"{rule} rule info:{rules[category][rule]["info"]}")
+                if log_type == "jar-log":
+                    log.comment(f"{rule} rule info:{rules[category][rule]["info"]}")
                 keywords_args = {}
 
                 for arg in rules[category][rule]["arguments"]:
@@ -238,77 +240,126 @@ def check(
 
 def print_help(
     )-> None:
-    print(f"""{Text(__program__).bold().underline() + Color(Color.C_RESET)}
+    print(f"""
+{Text(__program__).bold() + Color(Color.C_RESET)}
 
-C coding style checker for Epitech projects.
+C Coding Style Checker for Epitech Projects
 
-Version: {__version__}
-Author: {__author__}
-Contact: {__email__}
+Version : {__version__}
+Author  : {__author__}
+Contact : {__email__}
 
-Description:
-    JCCS scans a project directory and checks C source files against
-    defined coding style rules. Rules are modular and can be executed
-    individually or collectively.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Usage:
+DESCRIPTION
+    JCCS recursively scans a project directory and analyzes C source
+    files according to modular coding style rules.
+
+    Rules can be:
+        • Executed collectively (default behavior)
+        • Filtered individually
+        • Configured dynamically at runtime
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+USAGE
     JCCS [OPTIONS]
 
-Options:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GENERAL OPTIONS
+
     {Text("-h").italic() + Color(Color.C_RESET)}, {Text("--help").italic() + Color(Color.C_RESET)}
         Display this help message and exit.
 
     {Text("-v").italic() + Color(Color.C_RESET)}, {Text("--version").italic() + Color(Color.C_RESET)}
-        Show program name, version and author and exit.
+        Display program name, version and author, then exit.
+
+    {Text("-a").italic() + Color(Color.C_RESET)}, {Text("--show-arguments").italic() + Color(Color.C_RESET)}
+        Display all available rule categories, rules,
+        and their configurable arguments, then exit.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PROJECT CONFIGURATION
 
     {Text("-r").italic() + Color(Color.C_RESET)}, {Text("--root").italic() + Color(Color.C_RESET)} <path>
         Define the root directory to analyze.
         Default: current directory (.)
 
-    {Text("-e").italic() + Color(Color.C_RESET)}, {Text("--exclude").italic() + Color(Color.C_RESET)} <path>
-        Exclude a path from the root directory (cumulative).
+    {Text("-e").italic() + Color(Color.C_RESET)}, {Text("--exclude").italic() + Color(Color.C_RESET)} <path1> [path2 ...]
+        Exclude one or multiple paths from scanning.
+        • Accepts space-separated values.
+        • Can be used multiple times.
+        • Values may also be passed inside quotes.
 
-    {Text("-R").italic() + Color(Color.C_RESET)}, {Text("--rule").italic() + Color(Color.C_RESET)} <rule_name>
-        Run only a specific rule.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-    {Text("-R").italic() + Color(Color.C_RESET)}, {Text("--rule").italic() + Color(Color.C_RESET)} "[RULE1 RULE2 ...]"
-        Run multiple specific rules (space separated inside brackets).
+RULE SELECTION & CONFIGURATION
+
+    {Text("-R").italic() + Color(Color.C_RESET)}, {Text("--rule").italic() + Color(Color.C_RESET)} <rule1> [rule2 ...]
+        Execute only the specified rule(s).
+        • Accepts multiple rule names.
+        • Replaces default rule set with a custom selection.
+        • Fails if a rule does not exist.
 
     {Text("-S").italic() + Color(Color.C_RESET)}, {Text("--set").italic() + Color(Color.C_RESET)} <CATEGORY> <RULE> <ARG> <VALUE>
         Override a rule argument at runtime.
+        • CATEGORY must exist.
+        • RULE must exist in the category.
+        • ARG must be configurable.
+        • VALUE replaces the default argument value.
 
-    {Text("-a").italic() + Color(Color.C_RESET)}, {Text("--show-arguments").italic() + Color(Color.C_RESET)}
-        Display all available rules with their descriptions
-        and configurable arguments and exit.
-    
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OUTPUT CONTROL
+
     {Text("-s").italic() + Color(Color.C_RESET)}, {Text("--silent").italic() + Color(Color.C_RESET)}
-        Display only rule summaries (hide detailed error output).
+        Silent mode (level 1):
+        Display rule summaries only.
 
     {Text("--super-silent").italic() + Color(Color.C_RESET)}
-        Display only JCCS result (hide detailed error output and summaries).
+        Silent mode (level 2):
+        Display only the final JCCS result.
 
     {Text("-V").italic() + Color(Color.C_RESET)}, {Text("--verbose").italic() + Color(Color.C_RESET)}
-        Enable verbose mode for rules that support it.
+        Verbose mode (level 1):
+        Enable additional rule-level debugging output.
 
     {Text("--super-verbose").italic() + Color(Color.C_RESET)}
-        Enable full verbose mode for rules that support it (can take a lot of place in the terminal).
+        Verbose mode (level 2):
+        Enable full detailed rule execution output.
+        (May significantly increase terminal output.)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+LOGGING
 
     {Text("-j").italic() + Color(Color.C_RESET)}, {Text("--json-log").italic() + Color(Color.C_RESET)}
-        Switch log file to JSON (instead of JAR-LOG).
+        Switch log format to JSON.
+        Default format: JAR-LOG.
 
     {Text("--no-log").italic() + Color(Color.C_RESET)}
-        Delete log file at the end of the program.
+        Delete the log file at program termination.
 
-Exit codes:
-    0       Success (no style errors found)
-    84      Failure (style errors detected or invalid usage)
-    -1      Fatal internal error during rule execution
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Behavior:
+EXIT CODES
+
+    0       Success — No style errors detected
+    84      Failure — Style errors detected or invalid usage
+    1       Fatal internal error during rule execution
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+BEHAVIOR
+
     • Recursively scans non-hidden files from the root directory.
     • Applies selected coding style rules.
-    • Allows runtime rule filtering and argument configuration.
-    • Displays formatted rule results (OK/KO).""")
+    • Supports runtime rule filtering and argument overrides.
+    • Produces structured rule results (OK / KO).
+    • Logs execution details unless disabled.
+""")
 
 
 # Main #
@@ -333,8 +384,8 @@ if __name__ == '__main__':
         from rules import Rules
 
     except Exception:
-        print(Text("Failed to import the rules").error())
-        RULES = {}
+        print(Text("Failed to import the rules").critic())
+        exit(EXIT_FATAL)
 
     else:
         RULES = Rules.RULES
@@ -537,7 +588,6 @@ if __name__ == '__main__':
                                 if argv[index + 3] in RULES[argv[index + 1]][argv[index + 2]]["arguments"]:
                                     log.log("VALID", "Flag", f"-S/--set {repr(argv[index + 1])}/{repr(argv[index + 2])}/{repr(argv[index + 3])} set to {repr(argv[index + 4])}")
                                     RULES[argv[index + 1]][argv[index + 2]]["arguments"][argv[index + 3]] = argv[index + 4]
-                                    print(RULES[argv[index + 1]][argv[index + 2]]["arguments"])
                                     index += 5
 
                                 else:
@@ -645,7 +695,7 @@ if __name__ == '__main__':
         if arg_verbose:
             print(Text(" ").debug(title=True), Text(f"ending check").debug())
 
-    exit_status = (EXIT_FAILURE if error_amount else EXIT_SUCCESS)
+    exit_status = (EXIT_FAILURE if error_amount > 0 else EXIT_SUCCESS)
 
     if error_amount > 0:
         print(Text("JCCS").bold(), "finished", Text("[KO]").error(), Text(f"({error_amount} error)").italic())
@@ -656,6 +706,7 @@ if __name__ == '__main__':
     else:
         print(Text("JCCS").bold().critic() + Text(" terminated").critic())
         log.log("CRIT", "Program", f"JCCS terminated due to an internal error")
+        exit_status = EXIT_FATAL
 
     if arg_verbose:
         print(Text(" ").debug(title=True), Text(f"ending JCCS").debug())

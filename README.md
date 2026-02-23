@@ -1,39 +1,42 @@
 # JCCS — Jarbin C Coding Style
 
-
-JCCS (Jarbin C Coding Style) is a modular C coding style checker designed for Epitech projects.  
-It analyzes a project directory and validates C source files against a structured rule system inspired by the official coding style specification.
+JCCS (Jarbin C Coding Style) is a modular C coding-style checker developed for Epitech projects.
+It recursively scans a project directory and validates C source files against a structured, extensible rule system inspired by the official Epitech coding-style specification.
 
 ---
 
 ## 📌 Overview
 
-JCCS is built to:
+JCCS provides:
 
-- Recursively scan a project directory
-- Apply configurable coding style rules
-- Support rule filtering and runtime argument configuration
-- Provide structured and colored terminal output
-- Return standardized exit codes for scripting and CI integration
+* Recursive project scanning (hidden files and folders ignored)
+* Modular rules grouped by categories (easy to add / remove rules)
+* Runtime rule selection and per-rule argument overrides
+* Structured, colored terminal output and optional JSON or JAR-LOG logging
+* Deterministic exit codes for CI and scripting
 
-The checker is fully modular: each rule is independent and can be executed individually.
+Each rule is independent and can be executed individually or as part of the full suite.
 
 ---
 
-## ⚙️ Program Information
+## ⚙️ Program information
 
-```text
-__program__ = "JCCS (Jarbin-C-Coding-Style)"
-__version__ = "v0.2"
-__author__ = "Jarjarbin06"
-__email__ = "nathan.amaraggi@epitech.eu"
+Use the following identifiers inside the program:
+
+```
+__program__  = "JCCS (Jarbin-C-Coding-Style)"
+__version__  = "v0.5"
+__author__   = "Jarjarbin06"
+__email__    = "nathan.amaraggi@epitech.eu"
 ```
 
+Console helpers are provided by `jarbin_toolkit_console`. Logging is handled by `jarbin_toolkit_log` (JSON or JAR-LOG).
+
 ---
 
-## 📁 Project Structure
+## 📁 Project structure (example)
 
-```text
+```
 ├── epitech_c_coding_style.pdf
 ├── JCCS
 ├── LICENSE
@@ -56,30 +59,26 @@ __email__ = "nathan.amaraggi@epitech.eu"
 
 ---
 
-## 🧠 Rule System
+## 🧠 Rule system
 
-Rules are registered inside:
+Rules are registered in `sources/rules/Rules.py`. The global `RULES` structure follows:
 
-```text
-sources/rules/Rules.py
+* Category key -> a mapping with:
+
+  * `"name"`: human readable name
+  * `"info"`: description
+  * `<RULE_ID>` entries: each rule is a dict with `"info"`, `"check"`, `"arguments"`
+
+Contract for a rule `check` function:
+
+* Signature: `check(files: list[str], kwargs: dict) -> list[RuleError] | None`
+* Receives: list of file paths and keyword args (defaults + runtime overrides)
+* Returns: `None` or `[]` on success, or a `list[RuleError]` when violations are found
+
+Example conceptual mapping (human-readable):
+
 ```
-
-Each rule is declared inside the global `RULES` dictionary:
-
-```text
-RULES["RULE-ID"] = {
-    "info": <rule_description>,
-    "check": <rule_function>,
-    "arguments": {
-        "ARG_NAME": <argument_default_value>
-    }
-}
-```
-
-### Example — C-O1
-
-```text
-RULES["C-O1"] = {
+RULES["O"][O1.name] = {
     "info": O1.info,
     "check": O1.check,
     "arguments": {
@@ -89,148 +88,160 @@ RULES["C-O1"] = {
 }
 ```
 
-Each rule:
-
-- Receives a list of file paths
-- Returns a list of `RuleError` objects if violations are found
-- Can optionally support verbose mode
-
 ---
 
 ## 🚀 Usage
 
-```text
+Run the CLI:
+
+```
 JCCS [OPTIONS]
 ```
 
-### Available Options
+### Available options
 
-```text
+```
 -h, --help
     Display help message and exit.
 
 -v, --version
     Show program name, version and author and exit.
 
+-a, --show-arguments
+    Display available categories, rules and their configurable arguments, then exit.
+
 -r, --root <path>
-    Define the root directory to analyze.
-    Default: current directory (.)
+    Root directory to analyze. Default: current directory (.)
 
--e, --exclude <path>
-    Define the root directory to analyze.
-    Default: current directory (.)
+-e, --exclude <path1> [path2 ...]
+    Exclude one or several paths from scanning.
+    • Accepts space-separated values.
+    • Can be used multiple times.
+    • Values may also be passed inside quotes.
 
--R, --rule <rule_name>
-    Run only a specific rule.
-
--R, --rule "[RULE1 RULE2 ...]"
-    Run multiple specific rules (space separated inside brackets).
+-R, --rule <rule1> [rule2 ...]
+    Run only the specified rule(s).
+    • Accepts multiple rule names.
+    • Replaces the default rule set with the custom selection.
+    • Fails if a rule does not exist.
 
 -S, --set <CATEGORY> <RULE> <ARG> <VALUE>
     Override a rule argument at runtime.
-
--a, --show-arguments
-    Display all available rules and their configurable arguments and exit.
+    • CATEGORY must exist.
+    • RULE must exist in the category.
+    • ARG must be configurable.
 
 -s, --silent
-    Display only JCCS result and rule summaries (hide detailed error output).
+    Silent mode (level 1): display rule summaries only.
 
 --super-silent
-    Display only JCCS result (hide detailed error output and summaries).
+    Silent mode (level 2): display only final JCCS result.
 
 -V, --verbose
-    Enable minimal verbose mode for supported rules.
+    Verbose mode (level 1): enable extra debug output.
 
 --super-verbose
-    Enable full verbose mode for supported rules.
+    Verbose mode (level 2): full detailed execution output.
+
+-j, --json-log
+    Switch log file format to JSON (default: JAR-LOG).
+
+--no-log
+    Delete the log file at program termination.
 ```
+
+Notes:
+
+* `-e` and `-R` accept multiple space-separated values and can be repeated; quoted groups are also supported.
+* `-S` expects four tokens after the flag: `CATEGORY RULE ARG VALUE`.
 
 ---
 
-## 🔍 Execution Behavior
+## 🔍 Execution behavior
 
-- Hidden files and folders are ignored.
-- The root directory is scanned recursively.
-- Rules are executed sequentially.
-- Each rule outputs:
-  - `[OK]` if no error
-  - `[KO]` if violations detected
-- Detailed errors are printed unless `--silent` is enabled.
+* Hidden files and folders (starting with `.`) are ignored.
+* The tool traverses the root directory recursively; `--exclude` prunes traversal.
+* Rules execute sequentially, grouped by category; execution time and logs recorded per rule.
+* Rule outputs:
+
+  * `[OK]` — no error
+  * `[KO]` — violations found (detailed errors printed unless `--silent`)
 
 ---
 
-## 📤 Exit Codes
+## 📤 Exit codes
 
-```text
-0       Success (no style errors found)
-84      Failure (style errors detected or invalid usage)
--1      Fatal internal rule execution error
 ```
+0   — Success (no style errors found)
+84  — Failure (style errors found or invalid usage)
+1   — Fatal internal error during rule execution
+```
+
+(Use these codes in CI to differentiate check failures vs internal errors.)
 
 ---
 
 ## 🛠 Installation
 
-To install:
+Install system-wide (may require privileges):
 
-```text
+```
 make install
 ```
 
-To uninstall:
+Uninstall:
 
-```text
+```
 make uninstall
 ```
 
+Notes:
+
+* Makefile may include targets to install shell completions (Zsh, Bash); check `scripts/`.
+* Prefer virtualenv for development.
+
 ---
 
-## 🧩 Extending JCCS
+## 🧩 Extending JCCS — add a rule
 
-To create a new rule:
-
-1. Add a Python file inside the appropriate category folder.
+1. Add a Python module inside the proper category directory (e.g. `sources/rules/G/G7.py`).
 2. Implement:
-   - `info` (string description)
-   - `check(files: list[str], kwargs: dict) -> list[RuleError] | None`
-3. Register it in `Rules.py`.
 
-The architecture ensures:
+   * `name` (string identifier)
+   * `info` (string description)
+   * `check(files: list[str], kwargs: dict) -> list[RuleError] | None`
+   * optional default argument constants
+3. Import and register the rule in `sources/rules/Rules.py` under the right category:
 
-- Strict separation between rules
-- Centralized rule management
-- Runtime argument configurability
+   * Add the rule dict with `"info"`, `"check"` and `"arguments"` entries.
+
+Keep rules single-purpose and deterministic. Use `RuleError` to report violations.
 
 ---
 
-## 🎯 Design Goals
+## 🎯 Design goals
 
-- Deterministic and predictable behavior
-- Modular rule architecture
-- Strict exit code policy
-- CI/CD compatible
-- Clean and structured output
-- Easily extensible for future rule sets
+* Deterministic, reproducible behavior (CI-ready)
+* Modular rule architecture — easy to extend and maintain
+* Clear exit codes and structured output
+* Configurable logging (human or JSON)
+* Readable output and developer-friendly internals
 
 ---
 
 ## 📜 License
 
-See the `LICENSE` file for details.
+See the `LICENSE` file included in the repository.
 
 ---
 
 ## 📎 Notes
 
-- The reference coding style specification is provided in:
-  
-```text
-epitech_c_coding_style.pdf
-```
-
-- Designed primarily for Epitech C projects.
-- Built with clarity, structure, and maintainability in mind.
+* Reference coding-style PDF: `epitech_c_coding_style.pdf` (included)
+* Primary target: Epitech C projects; rules are reusable
+* Focus: clarity, maintainability, predictable results
 
 ---
 
-**JCCS — Structured. Modular. Deterministic.**
+JCCS — Structured. Modular. Deterministic.
+<small>Readme made with AI</small>
