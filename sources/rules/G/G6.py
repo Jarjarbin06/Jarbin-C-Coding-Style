@@ -10,7 +10,7 @@
 name = "G6"
 info = """
 C-G6 - Line endings
-Line endings must be done in UNIX style (with \"\n\"), and must never end with a backslash (\"\\\").
+Line endings must be done in UNIX style (with \"\\n\"), and must never end with a backslash (\"\\\").
 """
 
 # Imports #
