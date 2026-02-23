@@ -37,15 +37,20 @@ def get_include_error(
     for index in range(len(file_list_str)):
         if "/*" in file_list_str[index]:
             is_a_comment = True
+
         if "*/" in file_list_str[index]:
             is_a_comment = False
+
         if (not is_a_function or is_a_comment) and "{" in file_list_str[index]:
             is_a_function = True
+
         if is_a_function and file_list_str[index].replace(" ", "") == "}\n":
             is_a_function = False
+
         if (not (is_a_comment or is_a_function)) and file_list_str[index] != "\n":
             if file_list_str[index].replace(" ", "").startswith("#include") and not ".h" in file_list_str[index]:
                 return f"line number {index + 1}:\n---\n{file_list_str[index]}{"" if file_list_str[index].endswith("\n") else "\n"}---\ninclude directive not including a \".h\" file"
+
     return ""
 
 def check(

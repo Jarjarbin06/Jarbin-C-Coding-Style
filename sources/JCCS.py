@@ -33,7 +33,6 @@ Console.init(banner=False)
 
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 84
-
 RULES: dict[str, str | dict[str, str | dict[str, str | Callable | dict[str, Any]]]]
 
 
@@ -48,7 +47,6 @@ def show_arguments(
     print(dash)
     print(dash_title[:int((len(Console.Console) - len(title)) / 2)] + title + dash_title[:int((len(Console.Console) - len(title)) / 2)])
     print(dash)
-
     last_rule = [rule for rule in rules][-1]
 
     for category in rules:
@@ -126,8 +124,8 @@ def check(
     jccs_timer = Time.StopWatch()
     category_timer = Time.StopWatch()
     rule_timer = Time.StopWatch()
-
     log.log("INFO", "Rule", f"*args set")
+
     if log_type == "jar-log":
         log.comment(f"*args set to paths")
 
@@ -142,7 +140,6 @@ def check(
             print(Text(" ").debug(title=True), Text(f"entering category \"{category}\" ({rules[category]["name"]})").debug())
 
         log.log("INFO", "Category", f"entering category {repr(category)}")
-
         len_title_line = len(f"┏━ {rules[category]["name"]} [•STARTED•] ━┓")
 
         if show_category_boxes:
@@ -157,7 +154,6 @@ def check(
 
                 log.log("INFO", f"Rule {rule}", f"entering rule {repr(rule)}")
                 log.comment(f"{rule} rule info:{rules[category][rule]["info"]}")
-
                 keywords_args = {}
 
                 for arg in rules[category][rule]["arguments"]:
@@ -170,13 +166,9 @@ def check(
                     log.comment(f"**kwargs = {repr(keywords_args)}")
 
                 rule_timer.start()
-
                 log.log("INFO", f"Rule {rule}", f"launching {repr(rule)} rule check")
-
                 errors = rules[category][rule]["check"](args, kwargs=keywords_args)
-
                 log.log("INFO", f"Rule {rule}", f"ending {repr(rule)} rule check")
-
                 rule_time = round(rule_timer.elapsed(), 10)
 
                 if verbose:
@@ -190,7 +182,6 @@ def check(
                 if errors:
 
                     log.log("INFO", f"Rule {rule}", f"errors found ({len(errors)} errors)")
-
                     category_error_count += len(errors)
 
                     if show_category_boxes:
@@ -224,7 +215,6 @@ def check(
             print("┗━", Text(f"{rules[category]["name"]}").bold(), (Text("[••ENDED••]").error() if category_error_count else Text("[••ENDED••]").valid()), "━┛", end="\n\n")
 
         error_count += category_error_count
-
         category_time = round(category_timer.elapsed(), 10)
 
         if verbose:
@@ -329,7 +319,7 @@ if __name__ == '__main__':
     root : str = "."
     arg_silent : int = 0
     arg_verbose : int = 0
-    arg_exclude : str = ""
+    arg_exclude : list = []
     log_type : str = "jar-log"
     arg_no_log : bool = False
 
@@ -360,21 +350,18 @@ if __name__ == '__main__':
     if "--no-log" in argv:
         if arg_verbose:
             print(Text(" ").debug(title=True), Text(f"Flag: --no-log").debug(), Text("(on)").info().italic())
-
         arg_no_log = True
 
     if "-V" in argv or "--verbose" in argv:
         print(Text(" ").debug(title=True), Text(f"Flag: -V/--verbose").debug(), Text("(on)").valid().italic())
 
         log.log("VALID", "Flag", "-V/--verbose activated")
-
         arg_verbose = 1
 
     if "--super-verbose" in argv:
         print(Text(" ").debug(title=True), Text(f"Flag: --super-verbose").debug(), Text("(full)").valid().italic())
 
         log.log("VALID", "Flag", "--super-verbose activated")
-
         arg_verbose = 2
 
     if "-s" in argv or "--silent" in argv:
@@ -382,7 +369,6 @@ if __name__ == '__main__':
             print(Text(" ").debug(title=True), Text(f"Flag: -s/--silent").debug(), Text("(on)").valid().italic())
 
         log.log("VALID", "Flag", "-s/--silent activated")
-
         arg_silent = 1
 
     if "--super-silent" in argv:
@@ -390,7 +376,6 @@ if __name__ == '__main__':
             print(Text(" ").debug(title=True), Text(f"Flag: --super-silent").debug(), Text("(full)").valid().italic())
 
         log.log("VALID", "Flag", "--super-silent activated")
-
         arg_silent = 2
 
     if len(argv) > 1:
@@ -437,21 +422,44 @@ if __name__ == '__main__':
 
                 elif argv[index] in ["-e", "--exclude"]:
                     if arg_verbose:
-                        print(Text(" ").debug(title=True), Text(f"Flag: -e/--exclude").debug(), Text("(used)").info().italic())
+                        print( Text(" ").debug(title=True), Text("Flag: -e/--exclude").debug(), Text("(used)").info().italic())
 
                     if (index + 1) < len(argv):
-                        arg_exclude = argv[index + 1]
-                        index += 2
+                        collected_excludes = []
+                        i = index + 1
+
+                        while i < len(argv) and not argv[i].startswith("-"):
+                            if " " in argv[i]:
+                                collected_excludes.extend(argv[i].split(" "))
+                            else:
+                                collected_excludes.append(argv[i])
+                            i += 1
+
+                        if not collected_excludes:
+                            print(Text(f"missing argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
+                            log.log("ERROR", "Flag", "-e/--exclude failed to set to new value")
+                            log.close()
+                            if arg_no_log:
+                                log.delete()
+                            exit(EXIT_FAILURE)
+
+                        if not isinstance(arg_exclude, list):
+                            arg_exclude = []
+
+                        for path in collected_excludes:
+                            if path not in arg_exclude:
+                                arg_exclude.append(path)
+
                         log.log("VALID", "Flag", f"-e/--exclude set to {repr(arg_exclude)}")
+                        index = i
 
                     else:
                         print(Text(f"missing argument (\"{argv[index]}\" at position {index + 1})").error(), file=stderr)
-                        log.log("ERROR", "Flag", f"-e/--exclude failed to set to new value")
+                        log.log("ERROR", "Flag", "-e/--exclude failed to set to new value")
                         log.close()
                         if arg_no_log:
                             log.delete()
                         exit(EXIT_FAILURE)
-
 
                 elif argv[index] in ["-R", "--rule"]:
 
@@ -489,8 +497,8 @@ if __name__ == '__main__':
                 """
                             }
                         }
-                        for arg in collected_rules:
 
+                        for arg in collected_rules:
                             rule_exist = False
 
                             for category in RULES:
@@ -508,9 +516,7 @@ if __name__ == '__main__':
                                 exit(EXIT_FAILURE)
 
                         RULES = new_rules
-
                         log.log("VALID", "Flag", f"-R/--rule new rules set")
-
                         index = i
 
                     else:
@@ -530,10 +536,8 @@ if __name__ == '__main__':
                             if argv[index + 2] in RULES[argv[index + 1]]:
                                 if argv[index + 3] in RULES[argv[index + 1]][argv[index + 2]]["arguments"]:
                                     log.log("VALID", "Flag", f"-S/--set {repr(argv[index + 1])}/{repr(argv[index + 2])}/{repr(argv[index + 3])} set to {repr(argv[index + 4])}")
-
                                     RULES[argv[index + 1]][argv[index + 2]]["arguments"][argv[index + 3]] = argv[index + 4]
                                     print(RULES[argv[index + 1]][argv[index + 2]]["arguments"])
-
                                     index += 5
 
                                 else:
@@ -573,7 +577,6 @@ if __name__ == '__main__':
                         print(Text(" ").debug(title=True), Text(f"Flag: -h/--help").debug(), Text("(used)").info().italic())
 
                     log.log("VALID", "Flag", f"-h/--help used")
-
                     print_help()
                     log.close()
                     if arg_no_log:
@@ -585,7 +588,6 @@ if __name__ == '__main__':
                         print(Text(" ").debug(title=True), Text(f"Flag: -v/--version").debug(), Text("(used)").info().italic())
 
                     log.log("VALID", "Flag", f"-v/--version used")
-
                     print(Text(__program__).bold(), Text(__version__).italic(), Text(f"by {__author__}"))
                     log.close()
                     if arg_no_log:
@@ -597,7 +599,6 @@ if __name__ == '__main__':
                         print(Text(" ").debug(title=True), Text(f"Flag: -a/--show-arguments").debug(), Text("(used)").info().italic())
 
                     log.log("VALID", "Flag", f"-a/--show-argument used")
-
                     show_arguments(RULES)
                     log.close()
                     if arg_no_log:
@@ -627,9 +628,7 @@ if __name__ == '__main__':
         print(Text(" ").debug(title=True), Text(f"starting JCCS").debug())
 
     print(Text("JCCS").bold(), "starting...", start="\n", end="\n\n")
-
-    paths = get_files(root, arg_exclude.split())
-
+    paths = get_files(root, arg_exclude)
     log.log("INFO", "Program", f"{len(paths)} paths found")
 
     if arg_verbose:
@@ -640,9 +639,7 @@ if __name__ == '__main__':
             print(Text(" ").debug(title=True), Text(f"starting check").debug())
 
         log.log("INFO", "Program", f"start check")
-
         error_amount = check(RULES, paths, silent=arg_silent, verbose=arg_verbose)
-
         log.log("INFO", "Program", "check finished" + (f" with {error_amount} errors" if error_amount > 0 else " (fatal error)"))
 
         if arg_verbose:

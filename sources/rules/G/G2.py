@@ -36,12 +36,15 @@ def get_line_error(
     for index in range(len(file_list_str)):
         if "/*" in file_list_str[index]:
             is_a_comment = True
+
         if "*/" in file_list_str[index]:
             is_a_comment = False
+
         if (not is_a_comment) and file_list_str[index] == "}\n":
             if (index + 2) < len(file_list_str):
                 if not (file_list_str[index + 1] == "\n" and file_list_str[index + 2] != "\n"):
                     return f"line number {index + 1}-{index + 3}:\n---\n{file_list_str[index]}{file_list_str[index + 1]}{file_list_str[index + 2]}{"" if file_list_str[index].endswith("\n") else "\n"}---\nthere must be an empty line between functions"
+
     return ""
 
 
