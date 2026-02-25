@@ -146,9 +146,9 @@ except Exception:
 
 else:
     RULES["MY"] = {
-        "name": "MY — My Rules",
+        "name": "C-MY — My Rules",
         "info": """
-MY — My Rules
+C-MY — My Rules
 Every rules made by Jarjarbin06 that can be helpful
 """
     }

@@ -133,7 +133,7 @@ def check(
     args : list = paths
     keywords_args: dict
     len_title_line: int
-    show_category_boxes = silent != 2
+    show_category_boxes = silent < 2
     show_rule_errors = silent == 0
     jccs_timer = Time.StopWatch()
     category_timer = Time.StopWatch()
@@ -165,7 +165,6 @@ def check(
                 continue
 
             try:
-
                 log.log("INFO", f"Rule {rule}", f"entering rule {repr(rule)}")
                 if log_type == "jar-log":
                     log.comment(f"{rule} rule info:{rules[category][rule]["info"]}")
@@ -445,6 +444,13 @@ if __name__ == '__main__':
         log.log("VALID", "Flag", "--super-silent activated")
         arg_silent = 2
 
+    if "--extreme-silent" in argv:
+        if arg_verbose:
+            print(Text(" ").debug(title=True), Text(f"Flag: --extreme-silent").debug(), Text("(full)").valid().italic())
+
+        log.log("VALID", "Flag", "--extreme-silent activated")
+        arg_silent = 3
+
     if len(argv) > 1:
 
         index: int = 1
@@ -468,6 +474,9 @@ if __name__ == '__main__':
                     index += 1
 
                 elif argv[index] in ["--super-silent"]:
+                    index += 1
+
+                elif argv[index] in ["--extreme-silent"]:
                     index += 1
 
                 elif argv[index] in ["-r", "--root"]:
@@ -704,7 +713,9 @@ if __name__ == '__main__':
     if arg_verbose:
         print(Text(" ").debug(title=True), Text(f"starting JCCS").debug())
 
-    print(Text("JCCS").bold(), "starting...", start="\n", end="\n\n")
+    if arg_silent != 3:
+        print(Text("JCCS").bold(), "starting...", start="\n", end="\n\n")
+
     paths = get_files(root, arg_exclude)
     log.log("INFO", "Program", f"{len(paths)} paths found")
 
@@ -724,16 +735,17 @@ if __name__ == '__main__':
 
     exit_status = (EXIT_FAILURE if error_amount > 0 else EXIT_SUCCESS)
 
-    if error_amount > 0:
-        print(Text("JCCS").bold(), "finished", Text("[KO]").error(), Text(f"({error_amount} error)").italic())
-        log.log("ERROR", "Program", f"JCCS terminated with {error_amount} error")
-    elif error_amount == 0:
-        print(Text("JCCS").bold(), "finished", Text("[OK]").valid())
-        log.log("VALID", "Program", f"JCCS terminated with success")
-    else:
-        print(Text("JCCS").bold().critic() + Text(" terminated").critic())
-        log.log("CRIT", "Program", f"JCCS terminated due to an internal error")
-        exit_status = EXIT_FATAL
+    if arg_silent != 3:
+        if error_amount > 0:
+            print(Text("JCCS").bold(), "finished", Text("[KO]").error(), Text(f"({error_amount} error)").italic())
+            log.log("ERROR", "Program", f"JCCS terminated with {error_amount} error")
+        elif error_amount == 0:
+            print(Text("JCCS").bold(), "finished", Text("[OK]").valid())
+            log.log("VALID", "Program", f"JCCS terminated with success")
+        else:
+            print(Text("JCCS").bold().critic() + Text(" terminated").critic())
+            log.log("CRIT", "Program", f"JCCS terminated due to an internal error")
+            exit_status = EXIT_FATAL
 
     if arg_verbose:
         print(Text(" ").debug(title=True), Text(f"ending JCCS").debug())
