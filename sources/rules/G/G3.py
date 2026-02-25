@@ -41,7 +41,7 @@ def get_global_error(
         if "*/" in file_list_str[index]:
             is_a_comment = False
 
-        if (not is_a_comment) and file_list_str[index].replace(" ", "") != "\n":
+        if (not is_a_comment) and (not file_list_str[index].replace(" ", "").startswith("//")) and file_list_str[index].replace(" ", "") != "\n":
             if file_list_str[index].replace(" ", "").startswith("#end"):
                 indentation_level -= 1
 

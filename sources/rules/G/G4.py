@@ -48,7 +48,7 @@ def get_indentation_error(
         if is_a_function and file_list_str[index].replace(" ", "") == "}\n":
             is_a_function = False
 
-        if (not (is_a_comment or is_a_function)) and file_list_str[index] != "\n":
+        if (not (is_a_comment or is_a_function)) and (not file_list_str[index].replace(" ", "").startswith("//")) and file_list_str[index] != "\n":
             if "=" in file_list_str[index] and len(file_list_str[index].split("=")[0].split()) > 1 and not(
                 "const" in file_list_str[index].split("=")[0].split() or file_list_str[index].startswith("    ")
                 or "(" in file_list_str[index][:file_list_str[index].index("=")]):

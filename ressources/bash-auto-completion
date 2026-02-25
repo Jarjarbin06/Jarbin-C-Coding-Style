@@ -31,7 +31,7 @@ _jccs_completion()
 
     # ----- Config: categories, rules, variables (easy to update) -----
     # Category keys (short) and human-readable list for -S category completion
-    local categories="A C F G H L O V"
+    local categories="A C F G H L O V MY"
     declare -A CAT_LONGNAME
     CAT_LONGNAME=(
         [A]="Advanced"
@@ -42,6 +42,7 @@ _jccs_completion()
         [L]="Layout"
         [O]="Files Organization"
         [V]="Variables And Types"
+        [MY]="My Rules"
     )
 
     # Rules grouped by category (space-separated strings)
@@ -55,6 +56,7 @@ _jccs_completion()
         [L]=""
         [O]="O1 O2 O3 O4"
         [V]=""
+        [MY]="MY1 MY2"
     )
 
     # Variables (arguments) supported per rule
@@ -63,6 +65,8 @@ _jccs_completion()
         [O1]="UNAUTHORIZED_EXTENSIONS EXCLUDED_FOLDERS"
         [O2]="AUTHORIZED_EXTENSIONS INCLUDED_FOLDERS"
         [O4]="CHECKED_EXTENSIONS VALID_CHARACTERS"
+        [MY1]="BANNED_FUNCTIONS"
+        [MY2]="BANNED_INCLUDES"
     )
 
     # flat list of all rules (space-separated)

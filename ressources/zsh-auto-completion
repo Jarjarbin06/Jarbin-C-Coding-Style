@@ -17,12 +17,14 @@ function _JCCS() {
         'L:Layout'
         'O:Files Organization'
         'V:Variables And Types'
+        'MY:My Rules'
     )
 
     # Rules grouped by category
     RULES_BY_CATEGORY=(
         G 'G1 G2 G3 G4 G5 G6'
         O 'O1 O2 O3 O4'
+        MY 'MY1'
     )
 
     # Variables for each rule
@@ -30,6 +32,8 @@ function _JCCS() {
         O1 'UNAUTHORIZED_EXTENSIONS EXCLUDED_FOLDERS'
         O2 'AUTHORIZED_EXTENSIONS INCLUDED_FOLDERS'
         O4 'CHECKED_EXTENSIONS VALID_CHARACTERS'
+        MY1 'BANNED_FUNCTIONS'
+        MY2 'BANNED_INCLUDES'
     )
 
     # Helper: flatten all rules

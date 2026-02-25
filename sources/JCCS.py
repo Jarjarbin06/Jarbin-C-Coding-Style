@@ -222,7 +222,7 @@ def check(
                 if show_category_boxes:
                     print(Text("┃"), Text(f"{rule} [FATAL ERROR]").critic(), file=stderr)
                     print(Text("┃"), Text(f"terminating JCCS").error(), file=stderr)
-                    print("┗━", Text(f"{rules[category]["name"]} ").bold(), (Text("[••TERM••]").critic() if category_error_count else Text("[••ENDED••]").valid()), "━┛", end="\n\n")
+                    print("┗━", Text(f"{rules[category]["name"]} ").bold(), Text("[••TERM••]").critic(), "━┛", end="\n\n")
                 return -1
 
         if show_category_boxes:
@@ -717,7 +717,7 @@ if __name__ == '__main__':
 
         log.log("INFO", "Program", f"start check")
         error_amount = check(RULES, paths, silent=arg_silent, verbose=arg_verbose)
-        log.log("INFO", "Program", "check finished" + (f" with {error_amount} errors" if error_amount > 0 else " (fatal error)"))
+        log.log("INFO", "Program", "check finished" + (f" with {error_amount} errors" if error_amount >= 0 else " (fatal error)"))
 
         if arg_verbose:
             print(Text(" ").debug(title=True), Text(f"ending check").debug())

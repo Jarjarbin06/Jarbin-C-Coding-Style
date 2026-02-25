@@ -137,4 +137,35 @@ File and folder names must be clear, descriptive, in English, and follow snake_c
 
 ## C-V - Variables And Types ##
 
+## MY - My Rules ##
+try:
+    from rules.MY import MY1, MY2
+
+except Exception:
+    print(Text("Failed to import MY rules").error())
+
+else:
+    RULES["MY"] = {
+        "name": "MY — My Rules",
+        "info": """
+MY — My Rules
+Every rules made by Jarjarbin06 that can be helpful
+"""
+    }
+
+    RULES["MY"][MY1.name] = {
+        "info": MY1.info,
+        "check": MY1.check,
+        "arguments": {
+            "BANNED_FUNCTIONS": MY1.BANNED_FUNCTIONS
+        }
+    }
+    RULES["MY"][MY2.name] = {
+        "info": MY2.info,
+        "check": MY2.check,
+        "arguments": {
+            "BANNED_INCLUDES": MY2.BANNED_INCLUDES
+        }
+    }
+
 Console.quit(delete_log=True)
