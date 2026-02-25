@@ -88,6 +88,7 @@ function _JCCS() {
         '(-a --show-arguments)'{-a,--show-arguments}'[Display all available rules and exit]' \
         '(-s --silent)'{-s,--silent}'[Display only rule summaries]' \
         '--super-silent[Display only final JCCS result]' \
+        '--extreme-silent[No display]' \
         '(-V --verbose)'{-V,--verbose}'[Enable verbose mode]' \
         '--super-verbose[Enable full verbose mode]' \
         '(-r --root)'{-r,--root}'[Define root directory]:directory:_files -/' \
