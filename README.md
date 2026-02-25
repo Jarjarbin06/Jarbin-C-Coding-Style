@@ -1,5 +1,7 @@
 # JCCS — Jarbin C Coding Style
 
+![JCCS logo failed to load](https://github.com/Jarjarbin06/Jarbin-C-Coding-Style/blob/main/ressources/JCCS_logo.jpg?raw=true "JCCS logo")
+
 JCCS (Jarbin C Coding Style) is a modular C coding-style checker developed for Epitech projects.
 It recursively scans a project directory and validates C source files against a structured, extensible rule system inspired by the official Epitech coding-style specification.
 
