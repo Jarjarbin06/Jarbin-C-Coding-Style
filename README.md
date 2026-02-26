@@ -27,7 +27,7 @@ Use the following identifiers inside the program:
 
 ```
 __program__  = "JCCS (Jarbin-C-Coding-Style)"
-__version__  = "v0.5"
+__version__  = "v0.9"
 __author__   = "Jarjarbin06"
 __email__    = "nathan.amaraggi@epitech.eu"
 ```
