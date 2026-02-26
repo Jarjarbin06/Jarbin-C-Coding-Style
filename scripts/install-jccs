@@ -18,7 +18,7 @@ install_jccs_bash() {
         if grep -q "\[JCCS\]" "$bash"; then
             echo -e "$YELLOW JCCS already installed in $bash$NC"
         else
-            echo "export PATH=\"$JCCS_DIR:\$PATH\" #[JCCS]" >> "$bash"
+            echo "export PATH=\"$JCCS_DIR/bin:\$PATH\" #[JCCS]" >> "$bash"
             echo "[ -f \"$JCCS_DIR/ressources/check_update-jccs\" ] && source \"$JCCS_DIR/ressources/check_update-jccs\" #[JCCS]" >> "$bash"
             echo "rm ~/.cache/jccs_last_check #[JCCS]" >> "$bash"
             cp -f "$JCCS_DIR/ressources/bash-auto-completion" "/etc/bash_completion.d/jccs"
@@ -37,7 +37,7 @@ install_jccs_zsh() {
             echo -e "$YELLOW JCCS already installed in $zsh$NC"
         else
             echo "typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet #[JCCS]" >> $zsh
-            echo "export PATH=\"$JCCS_DIR:\$PATH\" #[JCCS]" >> "$zsh"
+            echo "export PATH=\"$JCCS_DIR/bin:\$PATH\" #[JCCS]" >> "$zsh"
             echo "[ -f \"$JCCS_DIR/ressources/check_update-jccs\" ] && source \"$JCCS_DIR/ressources/check_update-jccs\" #[JCCS]" >> "$zsh"
             echo "rm ~/.cache/jccs_last_check #[JCCS]" >> "$zsh"
             echo "fpath=($USER_HOME/.zsh/completions \$fpath) #[JCCS]" >> "$zsh"

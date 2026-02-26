@@ -2,4 +2,4 @@
 
 JCCS="$( dirname "${BASH_SOURCE[0]}")"
 
-python $JCCS/sources/JCCS.py "$@"
+python $JCCS/../sources/JCCS.py "$@"
