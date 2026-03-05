@@ -49,7 +49,7 @@ def check(
         folder_check : bool = False
 
         for folder in included_folders.split(" ") :
-            if f"/{folder.upper()}/" in file.upper() or f"{folder.upper()}/" in file.upper() :
+            if f"/{folder.upper()}/" in file.upper() or file.upper().startswith(f"{folder.upper()}/") :
                 folder_check = True
 
         if not folder_check :

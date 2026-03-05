@@ -305,7 +305,6 @@ PROJECT CONFIGURATION
     {Text("-e").italic() + Color(Color.C_RESET)}, {Text("--exclude").italic() + Color(Color.C_RESET)} <path1> [path2 ...]
         Exclude one or multiple paths from scanning.
         • Accepts space-separated values.
-        • Can be used multiple times.
         • Values may also be passed inside quotes.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -336,6 +335,10 @@ OUTPUT CONTROL
     {Text("--super-silent").italic() + Color(Color.C_RESET)}
         Silent mode (level 2):
         Display only the final JCCS result.
+
+    {Text("--extreme-silent").italic() + Color(Color.C_RESET)}
+        Silent mode (level 3):
+        No display.
 
     {Text("-V").italic() + Color(Color.C_RESET)}, {Text("--verbose").italic() + Color(Color.C_RESET)}
         Verbose mode (level 1):
