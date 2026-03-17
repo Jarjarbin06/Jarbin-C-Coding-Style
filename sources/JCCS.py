@@ -167,7 +167,7 @@ def check(
             try:
                 log.log("INFO", f"Rule {rule}", f"entering rule {repr(rule)}")
                 if log_type == "jar-log":
-                    log.comment(f"{rule} rule info:{rules[category][rule]["info"]}")
+                    log.comment(f"{rule} rule info:{rules[category][rule]["info"].removesuffix("\n")}")
                 keywords_args = {}
 
                 for arg in rules[category][rule]["arguments"]:
@@ -391,6 +391,7 @@ if __name__ == '__main__':
     arg_exclude : list = []
     log_type : str = "jar-log"
     arg_no_log : bool = False
+    arg_show_log : bool = False
 
     if Log.exist("."):
         log = Log(".", "JCCS")
@@ -415,11 +416,7 @@ if __name__ == '__main__':
         log_type = "json"
         log.delete()
         log = Log(".", "JCCS", True)
-
-    if "--no-log" in argv:
-        if arg_verbose:
-            print(Text(" ").debug(title=True), Text(f"Flag: --no-log").debug(), Text("(on)").info().italic())
-        arg_no_log = True
+        log.log("VALID", "Flag", "-j/--json-log activated")
 
     if "-V" in argv or "--verbose" in argv:
         print(Text(" ").debug(title=True), Text(f"Flag: -V/--verbose").debug(), Text("(on)").valid().italic())
@@ -432,6 +429,20 @@ if __name__ == '__main__':
 
         log.log("VALID", "Flag", "--super-verbose activated")
         arg_verbose = 2
+
+    if "--no-log" in argv:
+        if arg_verbose:
+            print(Text(" ").debug(title=True), Text(f"Flag: --no-log").debug(), Text("(on)").info().italic())
+
+        log.log("VALID", "Flag", "--no-log activated")
+        arg_no_log = True
+
+    if "--show-log" in argv:
+        if arg_verbose:
+            print(Text(" ").debug(title=True), Text(f"Flag: --show-log").debug(), Text("(on)").info().italic())
+
+        log.log("VALID", "Flag", "--show-log activated")
+        arg_show_log = True
 
     if "-s" in argv or "--silent" in argv:
         if arg_verbose:
@@ -465,6 +476,9 @@ if __name__ == '__main__':
                     index += 1
 
                 elif argv[index] in ["--no-log"]:
+                    index += 1
+
+                elif argv[index] in ["--show-log"]:
                     index += 1
 
                 elif argv[index] in ["-V", "--verbose"]:
@@ -754,6 +768,9 @@ if __name__ == '__main__':
         print(Text(" ").debug(title=True), Text(f"ending JCCS").debug())
 
     log.close()
+    if arg_show_log:
+        print(log)
+
     if arg_no_log:
         log.delete()
 
