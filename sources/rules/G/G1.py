@@ -12,6 +12,7 @@ info = """
 C-G1 - File header
 C files (.c, .h, ...) and every Makefiles must always start with the standard header of the school.
 """
+level = "MINOR"
 
 # Imports #
 from Error import RuleError
@@ -77,7 +78,7 @@ def check(
             assert check_file_ext(file), f"{file}\nC files (.c, .h, ...) and every Makefiles must always start with the standard header of the school"
 
         except AssertionError as error:
-            errors.append(RuleError(f"C-{name}", str(error)))
+            errors.append(RuleError(f"C-{name}", str(error), level=level))
 
     if verbose:
         print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())

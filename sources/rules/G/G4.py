@@ -13,6 +13,7 @@ C-G4 - Global variables
 Global variables must be avoided as much as possible.
 Only global constants should be used.
 """
+level = "MAJOR"
 
 # Imports #
 from Error import RuleError
@@ -52,7 +53,7 @@ def get_indentation_error(
             if "=" in file_list_str[index] and len(file_list_str[index].split("=")[0].split()) > 1 and not(
                 "const" in file_list_str[index].split("=")[0].split() or file_list_str[index].startswith("    ")
                 or "(" in file_list_str[index][:file_list_str[index].index("=")]):
-                return f"line number {index + 1}:\n---\n{file_list_str[index]}{"" if file_list_str[index].endswith("\n") else "\n"}---\n"
+                return f"line number {index + 1}:\n---\n{repr(file_list_str[index])}\n---\n"
 
     return ""
 
@@ -98,7 +99,7 @@ def check(
             assert check_file_ext(file), f"{file}\nOnly global constants should be used\n\n{get_indentation_error(file)}"
 
         except AssertionError as error:
-            errors.append(RuleError(f"C-{name}", str(error)))
+            errors.append(RuleError(f"C-{name}", str(error), level=level))
 
     if verbose:
         print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())

@@ -14,6 +14,7 @@ A source file must match a logical entity, and group all the functions associate
 Grouping functions that are not related to each other in the same file has to be avoided.
 You are allowed to have 10 functions (including at most 5 non-static functions) in total per file.
 """
+level = "MAJOR"
 
 # Imports #
 from Error import RuleError
@@ -57,7 +58,7 @@ def check(
             assert check_file_ext(file), f"{file}\nA source file must match a logical entity, and group all the functions associated with that entity"
 
         except AssertionError as error:
-            errors.append(RuleError(f"C-{name}", str(error)))
+            errors.append(RuleError(f"C-{name}", str(error), level=level))
 
     if verbose:
         print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())

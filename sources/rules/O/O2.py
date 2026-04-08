@@ -12,6 +12,7 @@ info = """
 C-O2 - File extension
 Sources in a C program must only have .c or .h extensions
 """
+level = "MAJOR"
 
 # Imports #
 from Error import RuleError
@@ -84,7 +85,7 @@ def check(
             assert check_file_ext(file), f"{file}\nSources in a C program must only have .c or .h extensions"
 
         except AssertionError as error:
-            errors.append(RuleError(f"C-{name}", str(error)))
+            errors.append(RuleError(f"C-{name}", str(error), level=level))
 
     if verbose:
         print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())

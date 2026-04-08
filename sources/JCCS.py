@@ -28,7 +28,7 @@ Console.init(banner=False)
 
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 84
-EXIT_FATAL = 1
+EXIT_FATAL = 84
 RULES: dict[str, str | dict[str, str | dict[str, str | Callable | dict[str, Any]]]]
 
 
@@ -41,7 +41,7 @@ __email__ : str = "nathan.amaraggi@epitech.eu"
 
 # Program #
 def show_arguments(
-        rules: dict[str, dict[str, Callable[[list[str]], None] | dict[str, Any]]]
+        rules: dict[str, str | dict[str, str | dict[str, str | Callable | dict[str, Any]]]]
     ) -> None:
 
     title = "   JCCS - RULES   "
@@ -79,12 +79,6 @@ def show_arguments(
     print(dash)
     print(dash)
 
-def missing_rule(
-        *args,
-        **kwargs
-    )-> list[RuleError] | None:
-    return [RuleError("Unknown Rule", "You tried to run an unknown rule")]
-
 def update_jccs() -> None:
     spinner = Animation.Spinner.stick(style=Animation.Style(border_left="[", border_right="]")).warning()
     update_script = f"{abspath(__file__).removesuffix("sources/JCCS.py")}scripts/update-jccs"
@@ -121,23 +115,40 @@ def get_files(
     return files
 
 def check(
-        rules: dict[str, dict[str, Callable[[list[str]], None] | dict[str, Any]]],
+        rules: dict[str, str | dict[str, str | dict[str, str | Callable | dict[str, Any]]]],
         paths: list[str],
         silent: int = 0,
         verbose: int = 0
     ) -> int:
 
-    errors: list[RuleError] | None = None
-    category_error_count: int = 0
-    error_count: int = 0
-    args : list = paths
+    def get_color(text: str) -> Text:
+        level = rules[category][rule]["level"]
+
+        if level == "FATAL":
+            level_color = 95
+        elif level == "MAJOR":
+            level_color = 91
+        elif level == "MINOR":
+            level_color = 93
+        elif level == "INFO":
+            level_color = 96
+        else:
+            level_color = 97
+
+        return Text(Color(level_color) + text)
+
+    errors: list[RuleError]
+    category_error_count: int
     keywords_args: dict
     len_title_line: int
-    show_category_boxes = silent < 2
-    show_rule_errors = silent == 0
-    jccs_timer = Time.StopWatch()
-    category_timer = Time.StopWatch()
-    rule_timer = Time.StopWatch()
+    rule_time: float
+    show_category_boxes: bool = silent < 2
+    show_rule_errors: bool = silent == 0
+    jccs_timer: Time.StopWatch = Time.StopWatch()
+    category_timer: Time.StopWatch = Time.StopWatch()
+    rule_timer: Time.StopWatch = Time.StopWatch()
+    error_count: int = 0
+    args: list = paths
     log.log("INFO", "Rule", f"*args set")
 
     if log_type == "jar-log":
@@ -154,10 +165,10 @@ def check(
             print(Text(" ").debug(title=True), Text(f"entering category \"{category}\" ({rules[category]["name"]})").debug())
 
         log.log("INFO", "Category", f"entering category {repr(category)}")
-        len_title_line = len(f"┏━ {rules[category]["name"]} [•STARTED•] ━┓")
+        len_title_line = len(f"┏━ {rules[category]["name"]} {"━" * 5} [•STARTED•] ━┓")
 
         if show_category_boxes:
-            print("┏━", Text(f"{rules[category]["name"]}").bold(), Text("[•STARTED•]").valid(), "━┓")
+            print("┏━", Text(f"{rules[category]["name"]}").bold(), "━" * 5, Text("[•STARTED•]").valid(), "━┓")
             print(Text("┃") + Cursor.move_column(len_title_line - 1) + Text(" ┃"), end="\n")
 
         for rule in rules[category]:
@@ -168,6 +179,7 @@ def check(
                 log.log("INFO", f"Rule {rule}", f"entering rule {repr(rule)}")
                 if log_type == "jar-log":
                     log.comment(f"{rule} rule info:{rules[category][rule]["info"].removesuffix("\n")}")
+
                 keywords_args = {}
 
                 for arg in rules[category][rule]["arguments"]:
@@ -179,17 +191,17 @@ def check(
                 if log_type == "jar-log":
                     log.comment(f"**kwargs = {repr(keywords_args)}")
 
-                rule_timer.start()
                 log.log("INFO", f"Rule {rule}", f"launching {repr(rule)} rule check")
+                rule_timer.start()
                 errors = rules[category][rule]["check"](args, kwargs=keywords_args)
+                rule_time = rule_timer.elapsed()
                 log.log("INFO", f"Rule {rule}", f"ending {repr(rule)} rule check")
-                rule_time = round(rule_timer.elapsed(), 10)
 
                 if verbose:
                     print(Text(" ").debug(title=True), Text(f"elapsed time for {category}/{rule} : {rule_time}").debug())
 
                 if log_type == "jar-log":
-                    log.comment(f"elapsed time for {category}/{rule} : {rule_time}")
+                    log.comment(f"elapsed time for {category}/{rule} : {rule_time:.5f}")
 
                 rule_timer.reset()
 
@@ -199,14 +211,15 @@ def check(
                     category_error_count += len(errors)
 
                     if show_category_boxes:
-                        print(Text("┃").error(), Text(f"{rule}").bold().error(), Text(f"({len(errors)})").italic().error(), end="")
-                        print(Cursor.move_column(len_title_line - 6) + Text("[KO]").error(), Text(" ┃").error(), Text("◀").error(), end=("\n┃\n" if show_rule_errors else "\n"))
+                        print(get_color("┃"), get_color(rule).bold(), get_color(f"({len(errors)})").italic(), end="")
+                        print(Cursor.move_column(len_title_line - 6) + get_color("[KO]"), get_color(" ┃"), get_color(f"◀ {rules[category][rule]["level"]}"), end=("\n" + str(get_color("┃")) + "\n" if show_rule_errors else "\n"))
 
                     for rule_error in errors:
                         log.log("ERROR", f"Rule {rule}", f"{rule_error.message.split("\n")[0]}")
 
                         if show_rule_errors:
-                            print("┃ " + str(rule_error).replace("\n", str(Color(Color.C_RESET) + "\n┃ ")), end="┃\n", file=stderr)
+                            print(get_color("┃ ") + str(rule_error).replace("\n", str(Color(Color.C_RESET) + "\n" + get_color("┃ "))), end=get_color("┃\n") + Color(Color.C_RESET), file=stderr)
+
 
                 elif show_category_boxes:
                     print(Text("┃"), Text(f"{rule}").bold(), Text("(no error)").italic(), end="")
@@ -214,19 +227,19 @@ def check(
 
                 log.log("INFO", f"Rule {rule}", f"leaving rule {repr(rule)}")
 
-            except Exception as err:
+            except BaseException as err:
 
                 log.log("CRIT", f"Rule {rule}", f"{str(err)}")
 
                 if show_category_boxes:
                     print(Text("┃"), Text(f"{rule} [FATAL ERROR]").critic(), file=stderr)
                     print(Text("┃"), Text(f"terminating JCCS").error(), file=stderr)
-                    print("┗━", Text(f"{rules[category]["name"]} ").bold(), Text("[••TERM••]").critic(), "━┛", end="\n\n")
+                    print("┗━", Text(f"{rules[category]["name"]} ").bold(), "━" * 5, Text("[••TERM••]").critic(), "━┛", end="\n\n")
                 return -1
 
         if show_category_boxes:
             print(Text("┃") + Cursor.move_column(len_title_line - 1) + Text(" ┃"), end="\n")
-            print("┗━", Text(f"{rules[category]["name"]}").bold(), (Text("[••ENDED••]").error() if category_error_count else Text("[••ENDED••]").valid()), "━┛", end="\n\n")
+            print("┗━", Text(f"{rules[category]["name"]}").bold(), "━" * 5, (Text("[••ENDED••]").error() if category_error_count else Text("[••ENDED••]").valid()), "━┛", end="\n\n")
 
         error_count += category_error_count
         category_time = round(category_timer.elapsed(), 10)
@@ -402,7 +415,7 @@ if __name__ == '__main__':
     try:
         from rules import Rules
 
-    except Exception:
+    except BaseException:
         print(Text("Failed to import the rules").critic())
         exit(EXIT_FATAL)
 
@@ -535,9 +548,6 @@ if __name__ == '__main__':
                             if arg_no_log:
                                 log.delete()
                             exit(EXIT_FAILURE)
-
-                        if not isinstance(arg_exclude, list):
-                            arg_exclude = []
 
                         for path in collected_excludes:
                             if path not in arg_exclude:
@@ -745,7 +755,10 @@ if __name__ == '__main__':
 
         log.log("INFO", "Program", f"start check")
         error_amount = check(RULES, paths, silent=arg_silent, verbose=arg_verbose)
-        log.log("INFO", "Program", "check finished" + (f" with {error_amount} errors" if error_amount >= 0 else " (fatal error)"))
+        if error_amount >= 0:
+            log.log("INFO", "Program", f"check finished ({error_amount} error)")
+        else:
+            log.log("CRIT", "Program", f"check terminated (fatal error)")
 
         if arg_verbose:
             print(Text(" ").debug(title=True), Text(f"ending check").debug())

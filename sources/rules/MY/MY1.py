@@ -12,6 +12,7 @@ info = """
 C-MY1 - banned functions
 Files must not contain any banned functions.
 """
+level = "MAJOR"
 
 # Imports #
 from Error import RuleError
@@ -91,7 +92,7 @@ def check(
             assert check_file_ext(file), f"{file}\nBanned functions must be avoided at all cost\n\n{get_function_error(file, banned_func)}"
 
         except AssertionError as error:
-            errors.append(RuleError(f"C-{name}", str(error)))
+            errors.append(RuleError(f"C-{name}", str(error), level=level))
 
     if verbose:
         print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())

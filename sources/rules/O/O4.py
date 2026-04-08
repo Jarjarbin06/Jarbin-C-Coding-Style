@@ -14,6 +14,7 @@ The name of the file must define the logical entity it represents, and thus be c
 unambiguous.
 All file names and folders must be in English, according to the snake_case convention (that is, only composed of lowercase, numbers, and underscores).
 """
+level = "MINOR"
 
 # Imports #
 from Error import RuleError
@@ -88,7 +89,7 @@ def check(
             assert check_file_ext(file), f"{file}\nThe name of the file must define the logical entity it represents, and thus be clear, precise, explicit and unambiguous"
 
         except AssertionError as error:
-            errors.append(RuleError(f"C-{name}", str(error)))
+            errors.append(RuleError(f"C-{name}", str(error), level=level))
 
     if verbose:
         print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())

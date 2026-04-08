@@ -12,6 +12,7 @@ info = """
 C-G3 - Indentation of preprocessor directives
 The preprocessor directives must be indented according to the level of indirection.
 """
+level = "MINOR"
 
 # Imports #
 from Error import RuleError
@@ -46,7 +47,7 @@ def get_global_error(
                 indentation_level -= 1
 
             if len(file_list_str[index].replace(" ", "")) > 0 and file_list_str[index].replace(" ", "")[0] == "#" and not file_list_str[index].startswith("    " * indentation_level):
-                return f"line number {index + 1}:\n---\n{file_list_str[index]}{"" if file_list_str[index].endswith("\n") else "\n"}---\nindentation level must be {indentation_level}"
+                return f"line number {index + 1}:\n---\n{repr(file_list_str[index])}\n---\nindentation level must be {indentation_level}"
 
             if file_list_str[index].replace(" ", "").startswith("#if"):
                 indentation_level += 1
@@ -95,7 +96,7 @@ def check(
             assert check_file_ext(file), f"{file}\nThe preprocessor directives must be indented according to the level of indirection\n\n{get_global_error(file)}"
 
         except AssertionError as error:
-            errors.append(RuleError(f"C-{name}", str(error)))
+            errors.append(RuleError(f"C-{name}", str(error), level=level))
 
     if verbose:
         print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())

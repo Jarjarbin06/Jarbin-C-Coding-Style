@@ -12,6 +12,7 @@ info = """
 C-O1 - Contents of the repository
 The repository must not contain compiled (.o, .a, .so, ...), temporary or unnecessary files (*~, #*#, etc.).
 """
+level = "MAJOR"
 
 # Imports #
 from Error import RuleError
@@ -82,7 +83,7 @@ def check(
             assert check_file_ext(file), f"{file}\nThe repository must not contain compiled (.o, .a, .so, ...), temporary or unnecessary files (*~, #*#, etc.)"
 
         except AssertionError as error:
-            errors.append(RuleError(f"C-{name}", str(error)))
+            errors.append(RuleError(f"C-{name}", str(error), level=level))
 
     if verbose:
         print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())

@@ -7,12 +7,13 @@
 #############################
 
 # INFO #
-name = "G2"
+name = "G10"
 info = """
-C-G2 - Separation of functions
-Inside a source file, implementations of functions must be separated by one and only one empty line.
+C-G10 - Inline assembly
+Inline assembly must never be used.
+Programming in C must be done... in C.
 """
-level = "MINOR"
+level = "FATAL"
 
 # Imports #
 from Error import RuleError
@@ -28,26 +29,14 @@ def get_line_error(
         file : str
     ) -> str:
 
-    is_a_comment = False
-
     with open(file, 'r') as f:
         file_list_str = f.readlines()
     f.close()
 
     for index in range(len(file_list_str)):
-        if "/*" in file_list_str[index]:
-            is_a_comment = True
-
-        if "*/" in file_list_str[index]:
-            is_a_comment = False
-
-        if (not is_a_comment) and (not file_list_str[index].replace(" ", "").startswith("//")) and file_list_str[index] == "}\n":
-            if (index + 3) < len(file_list_str):
-                if not file_list_str[index + 1].replace(" ", "").startswith("#") and not (file_list_str[index + 1] == "\n" and file_list_str[index + 2] != "\n"):
-                    return f"line number {index + 1}-{index + 3}:\n---\n{repr(file_list_str[index])}\n{repr(file_list_str[index + 1])}\n{repr(file_list_str[index + 2])}\n---\nthere must be an empty line between functions"
-
+        if file_list_str[index].replace("    ", "").startswith("asm") or "asm(" in file_list_str[index]:
+            return f"line number {index + 1}:\n---\n{repr(file_list_str[index])}\n---\nline containing assembly (asm)"
     return ""
-
 
 def check(
         paths,
@@ -68,18 +57,18 @@ def check(
             file : str
         ) -> bool:
 
-        if not file.endswith(".c"):
+        if not (file.endswith(".c") or file.endswith(".h")):
             if verbose == 2:
                 print(Text(" ").debug(title=True), Text(f"C-{name}: {file} not checked").debug(), Text("(skip)").info().italic())
             return True
 
         if get_line_error(file):
             if verbose:
-                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} functions not separated by empty line").debug(), Text("(invalid)").error().italic())
+                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} has an invalid line ending").debug(), Text("(invalid)").error().italic())
             return False
 
         if verbose == 2:
-            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} functions separation valid").debug(), Text("(valid)").valid().italic())
+            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} line ending valid").debug(), Text("(valid)").valid().italic())
         return True
 
     if verbose:
@@ -88,7 +77,7 @@ def check(
     # Main loop #
     for file in paths:
         try :
-            assert check_file_ext(file), f"{file}\nInside a source file, implementations of functions must be separated by one and only one empty line\n\n{get_line_error(file)}"
+            assert check_file_ext(file), f"{file}\nInline assembly must never be used.\n\n{get_line_error(file)}"
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error), level=level))

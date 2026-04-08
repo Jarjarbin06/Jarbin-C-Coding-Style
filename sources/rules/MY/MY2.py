@@ -12,6 +12,7 @@ info = """
 C-MY2 - banned includes
 Files must not contain any banned includes.
 """
+level = "MAJOR"
 
 # Imports #
 from Error import RuleError
@@ -92,7 +93,7 @@ def check(
             assert check_file_ext(file), f"{file}\nBanned includes must be avoided at all cost\n\n{get_include_error(file, banned_include)}"
 
         except AssertionError as error:
-            errors.append(RuleError(f"C-{name}", str(error)))
+            errors.append(RuleError(f"C-{name}", str(error), level=level))
 
     if verbose:
         print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())

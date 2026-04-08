@@ -12,6 +12,7 @@ info = """
 C-G6 - Line endings
 Line endings must be done in UNIX style (with \"\\n\"), and must never end with a backslash (\"\\\").
 """
+level = "MINOR"
 
 # Imports #
 from Error import RuleError
@@ -32,8 +33,8 @@ def get_line_error(
     f.close()
 
     for index in range(len(file_list_str)):
-        if not file_list_str[index].endswith("\n"):
-            return f"line number {index + 1}:\n---\n{file_list_str[index]}{"" if file_list_str[index].endswith("\n") else "\n"}---\nline not ending with \\n"
+        if file_list_str[index].endswith("\\\n"):
+            return f"line number {index + 1}:\n---\n{repr(file_list_str[index])}\n---\nline not ending with {repr("\n")}"
     return ""
 
 def check(
@@ -78,7 +79,7 @@ def check(
             assert check_file_ext(file), f"{file}\nLine endings must be done in UNIX style (with \"\\n\"), and must never end with a backslash (\"\\\")\n\n{get_line_error(file)}"
 
         except AssertionError as error:
-            errors.append(RuleError(f"C-{name}", str(error)))
+            errors.append(RuleError(f"C-{name}", str(error), level=level))
 
     if verbose:
         print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())

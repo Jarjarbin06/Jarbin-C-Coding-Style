@@ -12,6 +12,7 @@ info = """
 C-G5 - include
 include directives must only include C header (.h) files.
 """
+level = "MAJOR"
 
 # Imports #
 from Error import RuleError
@@ -49,7 +50,7 @@ def get_include_error(
 
         if (not (is_a_comment or is_a_function)) and (not file_list_str[index].replace(" ", "").startswith("//")) and file_list_str[index] != "\n":
             if file_list_str[index].replace(" ", "").startswith("#include") and not ".h" in file_list_str[index]:
-                return f"line number {index + 1}:\n---\n{file_list_str[index]}{"" if file_list_str[index].endswith("\n") else "\n"}---\ninclude directive not including a \".h\" file"
+                return f"line number {index + 1}:\n---\n{repr(file_list_str[index])}\n---\ninclude directive not including a {repr(".h")} file"
 
     return ""
 
@@ -95,7 +96,7 @@ def check(
             assert check_file_ext(file), f"{file}\nInclude directives must only include C header (.h) files\n\n{get_include_error(file)}"
 
         except AssertionError as error:
-            errors.append(RuleError(f"C-{name}", str(error)))
+            errors.append(RuleError(f"C-{name}", str(error), level=level))
 
     if verbose:
         print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())
