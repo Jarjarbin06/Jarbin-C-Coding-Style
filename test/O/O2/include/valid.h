@@ -1,8 +1,8 @@
 /*
 ** EPITECH PROJECT, 2025
-** sources - str_getnbr.c
+** test
 ** File description:
 ** <description>
 */
 
-aeepf gu asm()
+int add(int, int);
