@@ -7,50 +7,66 @@
 #############################
 
 # INFO #
-name = "G3"
-info = """
-C-G3 - Indentation of preprocessor directives
+language = "C"
+category = "G"
+name = f"{category}3"
+info = f"""
+{language}-{name} - Indentation of preprocessor directives
 The preprocessor directives must be indented according to the level of indirection.
 """
 level = "MINOR"
 
 # Imports #
-from Error import RuleError
+import re
 import jarbin_toolkit_console as Console
+
+from utils.error import RuleError
+from utils.file import File
+from utils.transform import Transform
+from utils.format import Format
 
 print = Console.Console.print
 Text = Console.Text.Text
 
 # Custom Variables #
 
+# Regex #
+RE_DIRECTIVE = re.compile(r'^\s*#')
+RE_IF = re.compile(r'^\s*#(if|ifdef|ifndef)\b')
+RE_ENDIF = re.compile(r'^\s*#endif\b')
+
 # Checker #
-def get_global_error(
-        file : str
-    ) -> str:
+def get_indentation_error(file: str) -> str:
+
+    lines = File.read_file(file)
+    cleaned = Transform.C.strip_comments(lines)
 
     indentation_level = 0
-    is_a_comment = False
 
-    with open(file, 'r') as f:
-        file_list_str = f.readlines()
-    f.close()
+    for index, line in cleaned:
 
-    for index in range(len(file_list_str)):
-        if "/*" in file_list_str[index]:
-            is_a_comment = True
+        stripped = line.lstrip(" ")
 
-        if "*/" in file_list_str[index]:
-            is_a_comment = False
+        if not stripped:
+            continue
 
-        if (not is_a_comment) and (not file_list_str[index].replace(" ", "").startswith("//")) and file_list_str[index].replace(" ", "") != "\n":
-            if file_list_str[index].replace(" ", "").startswith("#end"):
-                indentation_level -= 1
+        if RE_ENDIF.match(stripped):
+            indentation_level = max(0, indentation_level - 1)
 
-            if len(file_list_str[index].replace(" ", "")) > 0 and file_list_str[index].replace(" ", "")[0] == "#" and not file_list_str[index].startswith("    " * indentation_level):
-                return f"line number {index + 1}:\n---\n{repr(file_list_str[index])}\n---\nindentation level must be {indentation_level}"
+        if RE_DIRECTIVE.match(stripped):
 
-            if file_list_str[index].replace(" ", "").startswith("#if"):
-                indentation_level += 1
+            expected = "    " * indentation_level
+            actual = line[:len(line) - len(stripped)]
+
+            if actual != expected:
+                return Format.error(
+                    index,
+                    line.rstrip("\n"),
+                    f"indentation level must be {indentation_level}"
+                )
+
+        if RE_IF.match(stripped):
+            indentation_level += 1
 
     return ""
 
@@ -63,42 +79,61 @@ def check(
     errors = []
     verbose = kwargs.get("verbose", 0)
 
-    # Custom variables #
-
     if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-{name}: variables set").debug())
+        print(
+            Text(" ").debug(title=True),
+            Text(f"C-{name}: starting check").debug()
+        )
 
     # Custom check #
-    def check_file_ext(
-            file : str
-        ) -> bool:
+    def check_file_ext(file: str) -> bool:
 
-        if not file.endswith(".h"):
-            if verbose == 2:
-                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} not checked").debug(), Text("(skip)").info().italic())
+        if not (file.endswith(".c") or file.endswith(".h")):
+            if verbose:
+                print(
+                    Text(" ").debug(title=True),
+                    Text(f"C-{name}: {file} file valid").debug(),
+                    Text("(skip)").info().italic()
+                )
             return True
 
-        if get_global_error(file):
+        error = get_indentation_error(file)
+
+        if error:
             if verbose:
-                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} has bad indentation").debug(), Text("(invalid)").error().italic())
+                print(
+                    Text(" ").debug(title=True),
+                    Text(f"C-{name}: {file} bad preprocessor indentation").debug(),
+                    Text("(invalid)").error().italic()
+                )
             return False
 
-        if verbose == 2:
-            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} indentations valid").debug(), Text("(valid)").valid().italic())
-        return True
+        if verbose:
+            print(
+                Text(" ").debug(title=True),
+                Text(f"C-{name}: {file} indentation valid").debug(),
+                Text("(valid)").valid().italic()
+            )
 
-    if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-{name}: starting check").debug())
+        return True
 
     # Main loop #
     for file in paths:
-        try :
-            assert check_file_ext(file), f"{file}\nThe preprocessor directives must be indented according to the level of indirection\n\n{get_global_error(file)}"
+        try:
+            assert check_file_ext(file), (
+                f"{file}\n"
+                "The preprocessor directives must be indented according to the level of indirection\n\n"
+                f"{get_indentation_error(file)}"
+            )
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error), level=level))
 
     if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())
-
+        print(
+            Text(" ").debug(title=True),
+            Text(f"C-{name}: ending check").debug(),
+            Text(f"({len(errors)} errors found)").error().italic()
+            if errors else Text("(no error)").valid().italic()
+        )
     return errors if errors else None

@@ -13,14 +13,15 @@ print = Console.Console.print
 Text = Console.Text.Text
 
 # Rules #
-RULES: dict[str, str | dict[str, str | dict[str, str | Callable | dict[str, Any]]]] = {}
+RULES: dict[str, str | dict[str, str | dict[str, str | Callable | dict[str, tuple[Any, str | None]]]]] = {}
+ERRORS: list[str] = []
 
 ## C-O - Files Organization ##
 try:
     from rules.O import O1, O2, O3, O4
 
 except BaseException:
-    print(Text("Failed to import O rules (C-O — Files Organization)").error())
+    ERRORS.append("O rules (C-O — Files Organization)")
 
 else:
     RULES["O"] = {
@@ -40,8 +41,8 @@ File and folder names must be clear, descriptive, in English, and follow snake_c
         "info": O1.info,
         "check": O1.check,
         "arguments": {
-            "UNAUTHORIZED_EXTENSIONS": O1.UNAUTHORIZED_EXTENSIONS,
-            "EXCLUDED_FOLDERS": O1.EXCLUDED_FOLDERS
+            "UNAUTHORIZED_EXTENSIONS": (O1.UNAUTHORIZED_EXTENSIONS, O1.UNAUTHORIZED_EXTENSIONS_doc),
+            "EXCLUDED_FOLDERS": (O1.EXCLUDED_FOLDERS, O1.EXCLUDED_FOLDERS_doc)
         },
         "level": O1.level
     }
@@ -49,8 +50,8 @@ File and folder names must be clear, descriptive, in English, and follow snake_c
         "info": O2.info,
         "check": O2.check,
         "arguments": {
-            "AUTHORIZED_EXTENSIONS": O2.AUTHORIZED_EXTENSIONS,
-            "INCLUDED_FOLDERS": O2.INCLUDED_FOLDERS
+            "AUTHORIZED_EXTENSIONS": (O2.AUTHORIZED_EXTENSIONS, O2.AUTHORIZED_EXTENSIONS_doc),
+            "INCLUDED_FOLDERS": (O2.INCLUDED_FOLDERS, O2.INCLUDED_FOLDERS_doc)
         },
         "level": O2.level
     }
@@ -58,6 +59,8 @@ File and folder names must be clear, descriptive, in English, and follow snake_c
         "info": O3.info,
         "check": O3.check,
         "arguments": {
+            "CHECKED_EXTENSIONS": (O3.CHECKED_EXTENSIONS, O3.CHECKED_EXTENSIONS_doc),
+            "INCLUDED_FOLDERS": (O3.INCLUDED_FOLDERS, O3.INCLUDED_FOLDERS_doc)
         },
         "level": O3.level
     }
@@ -65,18 +68,17 @@ File and folder names must be clear, descriptive, in English, and follow snake_c
         "info": O4.info,
         "check": O4.check,
         "arguments": {
-            "CHECKED_EXTENSIONS": O4.CHECKED_EXTENSIONS,
-            "VALID_CHARACTERS": O4.VALID_CHARACTERS
+            "GENERIC_NAMES": (O4.GENERIC_NAMES, O4.GENERIC_NAMES_doc)
         },
         "level": O4.level
     }
 
 ## C-G - Global Scope ##
 try:
-    from rules.G import G1, G2, G3, G4, G5, G6, G7, G8, G10
+    from rules.G import G1, G2, G3, G4, G5, G6, G7, G8, G9, G10
 
 except BaseException:
-    print(Text("Failed to import G rules (C-G — Global Scope)").error())
+    ERRORS.append("G rules (C-G — Global Scope)")
 
 else:
     RULES["G"] = {
@@ -148,6 +150,14 @@ defined constants, and no inline assembly.
         },
         "level": G8.level
     }
+    RULES["G"][G9.name] = {
+        "info": G9.info,
+        "check": G9.check,
+        "arguments": {
+            "AUTHORIZED_VALUES": (G9.AUTHORIZED_VALUES, G9.AUTHORIZED_VALUES_doc)
+        },
+        "level": G9.level
+    }
     RULES["G"][G10.name] = {
         "info": G10.info,
         "check": G10.check,
@@ -173,7 +183,7 @@ try:
     from rules.MY import MY1, MY2
 
 except Exception:
-    print(Text("Failed to import MY rules").error())
+    ERRORS.append("MY (C-MY — My Rules)")
 
 else:
     RULES["MY"] = {
@@ -188,7 +198,7 @@ Every rules made by Jarjarbin06 that can be helpful
         "info": MY1.info,
         "check": MY1.check,
         "arguments": {
-            "BANNED_FUNCTIONS": MY1.BANNED_FUNCTIONS
+            "BANNED_FUNCTIONS": (MY1.BANNED_FUNCTIONS, MY1.BANNED_FUNCTIONS_doc)
         },
         "level": MY1.level
     }
@@ -196,7 +206,7 @@ Every rules made by Jarjarbin06 that can be helpful
         "info": MY2.info,
         "check": MY2.check,
         "arguments": {
-            "BANNED_INCLUDES": MY2.BANNED_INCLUDES
+            "BANNED_INCLUDES": (MY2.BANNED_INCLUDES, MY2.BANNED_INCLUDES_doc)
         },
         "level": MY2.level
     }

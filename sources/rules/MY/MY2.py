@@ -7,49 +7,58 @@
 #############################
 
 # INFO #
-name = "MY2"
-info = """
-C-MY2 - banned includes
+language = "C"
+category = "MY"
+name = f"{category}2"
+info = f"""
+{language}-{name} - banned includes
 Files must not contain any banned includes.
 """
-level = "MAJOR"
+level = "FATAL"
 
 # Imports #
-from Error import RuleError
+import re
 import jarbin_toolkit_console as Console
+
+from utils.error import RuleError
+from utils.file import File
+from utils.transform import Transform
+from utils.parser import Parser
+from utils.format import Format
 
 print = Console.Console.print
 Text = Console.Text.Text
 
-def get_include_error(
-        file : str,
-        banned_include : str
-    ) -> str:
-
-    is_a_comment = False
-
-    with open(file, 'r') as f:
-        file_list_str = f.readlines()
-    f.close()
-
-    for index in range(len(file_list_str)):
-        if "/*" in file_list_str[index]:
-            is_a_comment = True
-
-        if "*/" in file_list_str[index]:
-            is_a_comment = False
-
-        if not is_a_comment:
-            for banned in banned_include.split():
-                banned = f"{banned}.h" if not ".h" in banned else banned
-                if f"#include \"{banned}\"" in file_list_str[index] or f"#include <{banned}>" in file_list_str[index]:
-                    return f"line number {index + 1}:\n---\n{file_list_str[index]}{"" if file_list_str[index].endswith("\n") else "\n"}---\nbanned include: {banned}"
-    return ""
-
 # Custom Variables #
 BANNED_INCLUDES = ""
+BANNED_INCLUDES_doc = "Space-separated list of forbidden C header files (without or with .h extension)."
+
+# Regex #
 
 # Checker #
+def get_include_error(file: str, banned_include: str) -> str:
+
+    banned_set = set(banned_include.split())
+    file_list = File.read_file(file)
+
+    for index, line in Transform.C.strip_comments(file_list):
+
+        includes = Parser.C.extract_includes(line)
+
+        for include_name in includes:
+
+            include_base = include_name.replace(".h", "")
+
+            if include_name in banned_set or include_base in banned_set:
+                clean_line = line.rstrip("\n")
+                return Format.error(
+                    index,
+                    clean_line,
+                    f"banned include: {include_name}"
+                )
+
+    return ""
+
 def check(
         paths,
         **kwargs
@@ -60,42 +69,70 @@ def check(
     verbose = kwargs.get("verbose", 0)
 
     # Custom variables #
-    banned_include = kwargs.get("BANNED_INCLUDES", BANNED_INCLUDES)
+    global BANNED_INCLUDES
+    BANNED_INCLUDES = kwargs.get("BANNED_INCLUDES", BANNED_INCLUDES)
+
+    if isinstance(BANNED_INCLUDES, tuple):
+        BANNED_INCLUDES = BANNED_INCLUDES[0]
 
     if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-{name}: variables set").debug())
+        print(
+            Text(" ").debug(title=True),
+            Text(f"C-{name}: starting check").debug()
+        )
+
+    # Regex re-compiling #
 
     # Custom check #
-    def check_file_ext(
-            file : str
-        ) -> bool:
+    def check_file_ext(file: str) -> bool:
 
         if not (file.endswith(".c") or file.endswith(".h")):
-            if verbose == 2:
-                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} not checked").debug(), Text("(skip)").info().italic())
+            if verbose:
+                print(
+                    Text(" ").debug(title=True),
+                    Text(f"C-{name}: {file} file valid").debug(),
+                    Text("(skip)").info().italic()
+                )
             return True
 
-        if get_include_error(file, banned_include):
+        error = get_include_error(file, BANNED_INCLUDES)
+
+        if error:
             if verbose:
-                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} has an banned include").debug(), Text("(invalid)").error().italic())
+                print(
+                    Text(" ").debug(title=True),
+                    Text(f"C-{name}: {file} has a banned include").debug(),
+                    Text("(invalid)").error().italic()
+                )
             return False
 
-        if verbose == 2:
-            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} includes valid").debug(), Text("(valid)").valid().italic())
+        if verbose:
+            print(
+                Text(" ").debug(title=True),
+                Text(f"MY-{name}: {file} file valid").debug(),
+                Text("(valid)").valid().italic()
+            )
         return True
-
-    if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-{name}: starting check").debug())
 
     # Main loop #
     for file in paths:
-        try :
-            assert check_file_ext(file), f"{file}\nBanned includes must be avoided at all cost\n\n{get_include_error(file, banned_include)}"
+
+        try:
+            assert check_file_ext(file), (
+                f"{file}\n"
+                "Banned includes must be avoided at all cost\n\n"
+                f"{get_include_error(file, BANNED_INCLUDES)}"
+            )
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error), level=level))
 
     if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())
+        print(
+            Text(" ").debug(title=True),
+            Text(f"C-{name}: ending check").debug(),
+            Text(f"({len(errors)} errors found)").error().italic()
+            if errors else Text("(no error)").valid().italic()
+        )
 
     return errors if errors else None

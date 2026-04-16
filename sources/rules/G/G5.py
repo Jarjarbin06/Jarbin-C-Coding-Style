@@ -7,98 +7,127 @@
 #############################
 
 # INFO #
-name = "G5"
-info = """
-C-G5 - include
+language = "C"
+category = "G"
+name = f"{category}5"
+info = f"""
+{language}-{name} - include
 include directives must only include C header (.h) files.
 """
 level = "MAJOR"
 
 # Imports #
-from Error import RuleError
+import re
 import jarbin_toolkit_console as Console
+
+from utils.error import RuleError
+from utils.file import File
+from utils.transform import Transform
+from utils.format import Format
 
 print = Console.Console.print
 Text = Console.Text.Text
 
 # Custom Variables #
 
+# Regex #
+RE_INCLUDE = re.compile(r'^\s*#include\s+["<](.+)[">]')
+
 # Checker #
-def get_include_error(
-        file : str
-    ) -> str:
+def get_include_error(file: str) -> str:
 
-    is_a_comment = False
-    is_a_function = False
+    lines = File.read_file(file)
+    cleaned = Transform.C.strip_comments(lines)
 
-    with open(file, 'r') as f:
-        file_list_str = f.readlines()
-    f.close()
+    for index, line in cleaned:
 
-    for index in range(len(file_list_str)):
-        if "/*" in file_list_str[index]:
-            is_a_comment = True
+        stripped = line.strip()
 
-        if "*/" in file_list_str[index]:
-            is_a_comment = False
+        if not stripped:
+            continue
 
-        if (not is_a_function or is_a_comment) and "{" in file_list_str[index]:
-            is_a_function = True
+        if stripped.startswith("//"):
+            continue
 
-        if is_a_function and file_list_str[index].replace(" ", "") == "}\n":
-            is_a_function = False
+        match = RE_INCLUDE.match(line)
+        if not match:
+            continue
 
-        if (not (is_a_comment or is_a_function)) and (not file_list_str[index].replace(" ", "").startswith("//")) and file_list_str[index] != "\n":
-            if file_list_str[index].replace(" ", "").startswith("#include") and not ".h" in file_list_str[index]:
-                return f"line number {index + 1}:\n---\n{repr(file_list_str[index])}\n---\ninclude directive not including a {repr(".h")} file"
+        include_name = match.group(1)
+
+        if not include_name.endswith(".h"):
+
+            return Format.error(
+                index,
+                line.rstrip("\n"),
+                "include directive must only include .h files"
+            )
 
     return ""
 
-def check(
-        paths,
-        **kwargs
-    ) -> list[RuleError] | None:
+def check(paths, **kwargs) -> list[RuleError] | None:
 
     kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
 
-    # Custom variables #
-
     if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-{name}: variables set").debug())
+        print(
+            Text(" ").debug(title=True),
+            Text(f"C-{name}: starting check").debug()
+        )
 
     # Custom check #
-    def check_file_ext(
-            file : str
-        ) -> bool:
+    def check_file_ext(file: str) -> bool:
 
         if not (file.endswith(".c") or file.endswith(".h")):
-            if verbose == 2:
-                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} not checked").debug(), Text("(skip)").info().italic())
+            if verbose:
+                print(
+                    Text(" ").debug(title=True),
+                    Text(f"C-{name}: {file} file valid").debug(),
+                    Text("(skip)").info().italic()
+                )
             return True
 
-        if get_include_error(file):
+        error = get_include_error(file)
+
+        if error:
             if verbose:
-                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} has an invalid include").debug(), Text("(invalid)").error().italic())
+                print(
+                    Text(" ").debug(title=True),
+                    Text(f"C-{name}: {file} has invalid include").debug(),
+                    Text("(invalid)").error().italic()
+                )
             return False
 
-        if verbose == 2:
-            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} includes valid").debug(), Text("(valid)").valid().italic())
-        return True
+        if verbose:
+            print(
+                Text(" ").debug(title=True),
+                Text(f"C-{name}: {file} includes valid").debug(),
+                Text("(valid)").valid().italic()
+            )
 
-    if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-{name}: starting check").debug())
+        return True
 
     # Main loop #
     for file in paths:
-        try :
-            assert check_file_ext(file), f"{file}\nInclude directives must only include C header (.h) files\n\n{get_include_error(file)}"
+
+        try:
+            assert check_file_ext(file), (
+                f"{file}\n"
+                "Include directives must only include C header (.h) files"
+                f"\n\n{get_include_error(file)}"
+            )
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error), level=level))
 
     if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())
+        print(
+            Text(" ").debug(title=True),
+            Text(f"C-{name}: ending check").debug(),
+            Text(f"({len(errors)} errors found)").error().italic()
+            if errors else Text("(no error)").valid().italic()
+        )
 
     return errors if errors else None

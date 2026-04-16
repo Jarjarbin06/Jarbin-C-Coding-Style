@@ -1,116 +1,145 @@
-#!/bin/zsh
 #compdef JCCS
 
-function _JCCS() {
-    local state
-    local -A RULES_BY_CATEGORY
-    local -A VARS_BY_RULE
-    local -a categories rules
+_jccs_completion() {
+    local cur prev
+    cur="${words[CURRENT]}"
+    prev="${words[CURRENT-1]}"
 
-    # Categories
-    categories=(
-        'A:Advanced'
-        'C:Control Structures'
-        'F:Functions'
-        'G:Global Scope'
-        'H:Header Files'
-        'L:Layout'
-        'O:Files Organization'
-        'V:Variables And Types'
-        'MY:My Rules'
+    local -a categories=(G O MY)
+
+    typeset -A RULES_BY_CAT
+    RULES_BY_CAT=(
+        [G]="G1 G2 G3 G4 G5 G6 G7 G8 G9 G10"
+        [O]="O1 O2 O3 O4"
+        [MY]="MY1 MY2"
     )
 
-    # Rules grouped by category
-    RULES_BY_CATEGORY=(
-        G 'G1 G2 G3 G4 G5 G6'
-        O 'O1 O2 O3 O4'
-        MY 'MY1'
-    )
-
-    # Variables for each rule
+    typeset -A VARS_BY_RULE
     VARS_BY_RULE=(
-        O1 'UNAUTHORIZED_EXTENSIONS EXCLUDED_FOLDERS'
-        O2 'AUTHORIZED_EXTENSIONS INCLUDED_FOLDERS'
-        O4 'CHECKED_EXTENSIONS VALID_CHARACTERS'
-        MY1 'BANNED_FUNCTIONS'
-        MY2 'BANNED_INCLUDES'
+        [G9]="AUTHORIZED_VALUES"
+        [O1]="UNAUTHORIZED_EXTENSIONS EXCLUDED_FOLDERS"
+        [O2]="AUTHORIZED_EXTENSIONS INCLUDED_FOLDERS"
+        [O4]="CHECKED_EXTENSIONS VALID_CHARACTERS GENERIC_NAMES"
+        [MY1]="BANNED_FUNCTIONS"
+        [MY2]="BANNED_INCLUDES"
     )
 
-    # Helper: flatten all rules
-    rules=(${(kv)RULES_BY_CATEGORY})
-    rules=(${(s/ /)rules[@]})  # flatten key-values
+    local -a opts=(
+        -h --help -v --version -a --show-arguments --update
+        -r --root -e --exclude -R --rule -S --set
+        -s --silent --super-silent --extreme-silent
+        -V --verbose --super-verbose
+        -j --json-log --no-log --show-log
+    )
 
-    # Completion for multiple -R rules
-    _rules_completion() {
-        local -a typed remaining
-        typed=()
-        # collect rules already typed after -R
-        local i
-        for (( i = 1; i < CURRENT; i++ )); do
-            if [[ ${words[i-1]} == "-R" || ${words[i-1]} == "--rule" ]]; then
-                typed+=("${words[i]}")
-            fi
+    _complete_list() {
+        local -a items
+        items=("$@")
+        (( ${#items[@]} == 0 )) && return 0
+        compadd -Q -- "${items[@]}"
+    }
+
+    local i ridx sidx
+    local -a seg
+
+    # -r / --root
+    if [[ "$prev" == "-r" || "$prev" == "--root" ]]; then
+        _path_files -/
+        return 0
+    fi
+
+    # -e / --exclude
+    ridx=-1
+    for ((i=1; i<CURRENT; i++)); do
+        [[ "${words[i]}" == "-e" || "${words[i]}" == "--exclude" ]] && ridx=$i
+    done
+
+    if (( ridx >= 0 )); then
+        seg=()
+        for ((i=ridx+1; i<CURRENT; i++)); do
+            [[ "${words[i]}" == -* ]] && break
+            seg+=( "${words[i]}" )
         done
-        # remaining = all rules minus typed
-        remaining=(${rules:#${typed[@]}})
-        _describe -t rules 'rules' remaining
-    }
 
-    # Completion for multiple -e paths
-    _exclude_completion() {
-        _files -/
-    }
-
-    # Completion for -S (category -> rule -> variable)
-    _set_completion() {
-        local category rule
-        # First arg after -S is category
-        category=${words[CURRENT]}
-        _describe 'categories' categories
-        # Then rule (filtered by category)
-        if (( CURRENT > 1 )); then
-            local cat=${words[CURRENT-1]}
-            local -a rules_in_cat
-            rules_in_cat=(${(kv)RULES_BY_CATEGORY[$cat]})
-            _describe 'rules' rules_in_cat
+        if [[ "$cur" == -* ]]; then
+            _complete_list "${opts[@]}"
+        else
+            _path_files -/
         fi
-        # Then variable (filtered by rule)
-        if (( CURRENT > 2 )); then
-            local rule=${words[CURRENT-1]}
-            _describe 'variables' VARS_BY_RULE[$rule]
+        return 0
+    fi
+
+    # -R / --rule : CATEGORY RULE pairs
+    ridx=-1
+    for ((i=1; i<CURRENT; i++)); do
+        [[ "${words[i]}" == "-R" || "${words[i]}" == "--rule" ]] && ridx=$i
+    done
+
+    if (( ridx >= 0 )); then
+        seg=()
+        for ((i=ridx+1; i<CURRENT; i++)); do
+            [[ "${words[i]}" == -* ]] && break
+            seg+=( "${words[i]}" )
+        done
+
+        if [[ "$cur" == -* ]]; then
+            _complete_list "${opts[@]}"
+            return 0
         fi
-    }
 
-    _arguments -s -S \
-        '(-h --help)'{-h,--help}'[Display help message and exit]' \
-        '(-v --version)'{-v,--version}'[Show program name, version and author and exit]' \
-        '--update[Update the program and exit]' \
-        '(-a --show-arguments)'{-a,--show-arguments}'[Display all available rules and exit]' \
-        '(-s --silent)'{-s,--silent}'[Display only rule summaries]' \
-        '--super-silent[Display only final JCCS result]' \
-        '--extreme-silent[No display]' \
-        '(-V --verbose)'{-V,--verbose}'[Enable verbose mode]' \
-        '--super-verbose[Enable full verbose mode]' \
-        '(-r --root)'{-r,--root}'[Define root directory]:directory:_files -/' \
-        '(-e --exclude)'{-e,--exclude}'[Exclude a path]:directory:_files -/' \
-        '(-R --rule)'{-R,--rule}'[Run specific rule]:rule:->rules' \
-        '(-S --set)'{-S,--set}'[Override rule argument]:category:->category' \
-        '(-j --json-log)'{-j,--json-log}'[Switch logging to JSON]' \
-        '--no-log[Delete log at exit]' \
-        '--show-log[Show the log at exit]' \
-        '*::args:->args'
+        if (( ${#seg[@]} % 2 == 0 )); then
+            _complete_list "${categories[@]}"
+            return 0
+        else
+            local cat="${seg[-1]}"
+            [[ -n "${RULES_BY_CAT[$cat]}" ]] && _complete_list ${(s: :)RULES_BY_CAT[$cat]}
+            return 0
+        fi
+    fi
 
-    case $state in
-        rules)
-            _rules_completion
-            ;;
-        category)
-            _describe 'categories' categories
-            ;;
-        args)
-            if [[ ${words[CURRENT-1]} == "-S" || ${words[CURRENT-1]} == "--set" ]]; then
-                _set_completion
-            fi
-            ;;
-    esac
+    # -S / --set : CATEGORY RULE ARG VALUE
+    sidx=-1
+    for ((i=1; i<CURRENT; i++)); do
+        [[ "${words[i]}" == "-S" || "${words[i]}" == "--set" ]] && sidx=$i
+    done
+
+    if (( sidx >= 0 )); then
+        seg=()
+        for ((i=sidx+1; i<CURRENT; i++)); do
+            [[ "${words[i]}" == -* ]] && break
+            seg+=( "${words[i]}" )
+        done
+
+        if [[ "$cur" == -* ]]; then
+            _complete_list "${opts[@]}"
+            return 0
+        fi
+
+        case ${#seg[@]} in
+            0)
+                _complete_list "${categories[@]}"
+                ;;
+            1)
+                local cat="${seg[0]}"
+                [[ -n "${RULES_BY_CAT[$cat]}" ]] && _complete_list ${(s: :)RULES_BY_CAT[$cat]}
+                ;;
+            2)
+                _complete_list ${(s: :)VARS_BY_RULE[${seg[1]}]}
+                ;;
+            *)
+                return 0
+                ;;
+        esac
+
+        return 0
+    fi
+
+    # default
+    if [[ "$cur" == -* ]]; then
+        _complete_list "${opts[@]}"
+    else
+        _path_files
+    fi
 }
+
+compdef _jccs_completion JCCS

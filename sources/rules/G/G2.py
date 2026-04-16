@@ -7,16 +7,22 @@
 #############################
 
 # INFO #
-name = "G2"
-info = """
-C-G2 - Separation of functions
+language = "C"
+category = "G"
+name = f"{category}2"
+info = f"""
+{language}-{name} - Separation of functions
 Inside a source file, implementations of functions must be separated by one and only one empty line.
 """
 level = "MINOR"
 
 # Imports #
-from Error import RuleError
 import jarbin_toolkit_console as Console
+
+from utils.error import RuleError
+from utils.file import File
+from utils.transform import Transform
+from utils.format import Format
 
 print = Console.Console.print
 Text = Console.Text.Text
@@ -24,27 +30,35 @@ Text = Console.Text.Text
 # Custom Variables #
 
 # Checker #
-def get_line_error(
-        file : str
-    ) -> str:
+def get_line_error(file: str) -> str:
 
-    is_a_comment = False
+    lines = File.read_file(file)
 
-    with open(file, 'r') as f:
-        file_list_str = f.readlines()
-    f.close()
+    for index, line in Transform.C.strip_comments(lines):
 
-    for index in range(len(file_list_str)):
-        if "/*" in file_list_str[index]:
-            is_a_comment = True
+        if line.strip() == "}":
 
-        if "*/" in file_list_str[index]:
-            is_a_comment = False
+            # safe bounds
+            if index + 2 >= len(lines):
+                continue
 
-        if (not is_a_comment) and (not file_list_str[index].replace(" ", "").startswith("//")) and file_list_str[index] == "}\n":
-            if (index + 3) < len(file_list_str):
-                if not file_list_str[index + 1].replace(" ", "").startswith("#") and not (file_list_str[index + 1] == "\n" and file_list_str[index + 2] != "\n"):
-                    return f"line number {index + 1}-{index + 3}:\n---\n{repr(file_list_str[index])}\n{repr(file_list_str[index + 1])}\n{repr(file_list_str[index + 2])}\n---\nthere must be an empty line between functions"
+            next_line = lines[index + 1]
+            next_next_line = lines[index + 2]
+
+            # ignore preprocessor
+            if next_line.strip().startswith("#"):
+                continue
+
+            # must be exactly one empty line
+            if not (next_line == "\n" and next_next_line != "\n"):
+
+                return Format.error(
+                    (index, index + 2),
+                    line.rstrip("\n") + "\n" +
+                    next_line.rstrip("\n") + "\n" +
+                    next_next_line.rstrip("\n"),
+                    "there must be exactly one empty line between functions"
+                )
 
     return ""
 
@@ -58,42 +72,63 @@ def check(
     errors = []
     verbose = kwargs.get("verbose", 0)
 
-    # Custom variables #
-
     if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-{name}: variables set").debug())
+        print(
+            Text(" ").debug(title=True),
+            Text(f"C-{name}: starting check").debug()
+        )
 
     # Custom check #
-    def check_file_ext(
-            file : str
-        ) -> bool:
+    def check_file_ext(file: str) -> bool:
 
         if not file.endswith(".c"):
-            if verbose == 2:
-                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} not checked").debug(), Text("(skip)").info().italic())
+            if verbose:
+                print(
+                    Text(" ").debug(title=True),
+                    Text(f"C-{name}: {file} file valid").debug(),
+                    Text("(skip)").info().italic()
+                )
             return True
 
-        if get_line_error(file):
+        error = get_line_error(file)
+
+        if error:
             if verbose:
-                print(Text(" ").debug(title=True), Text(f"C-{name}: {file} functions not separated by empty line").debug(), Text("(invalid)").error().italic())
+                print(
+                    Text(" ").debug(title=True),
+                    Text(f"C-{name}: {file} function separation invalid").debug(),
+                    Text("(invalid)").error().italic()
+                )
             return False
 
-        if verbose == 2:
-            print(Text(" ").debug(title=True), Text(f"C-{name}: {file} functions separation valid").debug(), Text("(valid)").valid().italic())
-        return True
+        if verbose:
+            print(
+                Text(" ").debug(title=True),
+                Text(f"C-{name}: {file} function separation valid").debug(),
+                Text("(valid)").valid().italic()
+            )
 
-    if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-{name}: starting check").debug())
+        return True
 
     # Main loop #
     for file in paths:
-        try :
-            assert check_file_ext(file), f"{file}\nInside a source file, implementations of functions must be separated by one and only one empty line\n\n{get_line_error(file)}"
+
+        try:
+            assert check_file_ext(file), (
+                f"{file}\n"
+                "Inside a source file, implementations of functions must be separated by one and only one empty line\n\n"
+                f"{get_line_error(file)}"
+            )
 
         except AssertionError as error:
             errors.append(RuleError(f"C-{name}", str(error), level=level))
 
     if verbose:
-        print(Text(" ").debug(title=True), Text(f"C-{name}: ending check").debug(), Text(f"({len(errors)} errors found)").error().italic() if errors else Text("(no error)").valid().italic())
+        print(
+            Text(" ").debug(title=True),
+            Text(f"C-{name}: ending check").debug(),
+            Text(f"({len(errors)} errors found)").error().italic()
+            if errors else Text("(no error)").valid().italic()
+        )
 
     return errors if errors else None
