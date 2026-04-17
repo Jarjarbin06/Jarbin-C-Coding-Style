@@ -14,6 +14,8 @@ from jarbin_toolkit_log import Log
 
 import program.helper as Helper
 from program.update import update_jccs
+from program.rule.category import Category
+from program.rule.rule_manager import RuleManager
 
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 84
@@ -23,16 +25,16 @@ class Flag:
     def __init__(
         self,
         names: list[str],
+        handler: str | Callable,
         has_value: bool = False,
         multi: bool = False,
-        handler: str | Callable | None = None,
         description: str = ""
     ) -> None:
-        self.names: list[str] = names
-        self.has_value: bool = has_value
-        self.multi: bool = multi
-        self.handler: str | Callable | None = handler
-        self.description: str = description
+        self.names = names
+        self.has_value = has_value
+        self.multi = multi
+        self.handler: str | Callable = handler
+        self.description = description
 
     def __call__(
             self,
@@ -45,7 +47,8 @@ class Context:
 
     def __init__(
             self,
-            log
+            log: Log,
+            rules: RuleManager
         ) -> None:
         self.root: str = "."
         self.silent: int = 0
@@ -54,7 +57,9 @@ class Context:
         self.no_log: bool = False
         self.show_log: bool = False
         self.log: Log = log
-        self.rules = None
+
+        # NEW: RuleManager instead of dict
+        self.rules: RuleManager = rules
 
 def error(
         msg,
@@ -62,184 +67,120 @@ def error(
     ) -> None:
     print(Text(msg).error(), file=stderr)
     ctx.log.log("ERROR", "Flag", msg)
+    ctx.log.log("ERROR", "JCCS", "exiting JCCS")
     ctx.log.close()
     exit(EXIT_FAILURE)
 
+def log_exit(
+        ctx: Context
+    ) -> None:
+    ctx.log.log("INFO", "JCCS", "exiting JCCS")
+    ctx.log.close()
+    exit(EXIT_SUCCESS)
+
 def parse_args(
-        argv,
-        ctx: Context,
-        simplename: str,
-        fullname: str,
-        version: str,
-        author: str,
-        email: str
-    ) -> Context:
+    argv,
+    ctx: Context,
+    simplename: str,
+    fullname: str,
+    version: str,
+    author: str,
+    email: str
+) -> Context:
+
     i = 1
 
     # =========================
-    # HANDLERS
+    # HELPERS
     # =========================
-
-    def handle_json(
-            values
-        ) -> None:
-        ctx.log_type = "json"
+    def handle_json(_):
         ctx.log.delete()
         ctx.log = Log(".", "JCCS", True)
-        ctx.log.log("VALID", "Flag", "-j/--json-log activated")
+        ctx.log.log("VALID", "Flag", "-j activated")
 
-    def handle_verbose(
-            values
-        ) -> None:
-        print(Text(" ").debug(title=True), Text("Flag: -V/--verbose").debug(), Text("(on)").valid().italic())
-        ctx.log.log("VALID", "Flag", "-V/--verbose activated")
+    def handle_verbose(_):
         ctx.verbose = 1
+        ctx.log.log("VALID", "Flag", "-V activated")
 
-    def handle_super_verbose(
-            values
-        ) -> None:
-        print(Text(" ").debug(title=True), Text("Flag: --super-verbose").debug(), Text("(full)").valid().italic())
-        ctx.log.log("VALID", "Flag", "--super-verbose activated")
+    def handle_super_verbose(_):
         ctx.verbose = 2
+        ctx.log.log("VALID", "Flag", "--super-verbose activated")
 
-    def handle_no_log(
-            values
-        ) -> None:
-        if ctx.verbose:
-            print(Text(" ").debug(title=True), Text("Flag: --no-log").debug(), Text("(on)").info().italic())
-        ctx.log.log("VALID", "Flag", "--no-log activated")
+    def handle_no_log(_):
         ctx.no_log = True
+        ctx.log.log("VALID", "Flag", "--no-log activated")
 
-    def handle_show_log(
-            values
-        ) -> None:
-        if ctx.verbose:
-            print(Text(" ").debug(title=True), Text("Flag: --show-log").debug(), Text("(on)").info().italic())
-        ctx.log.log("VALID", "Flag", "--show-log activated")
+    def handle_show_log(_):
         ctx.show_log = True
+        ctx.log.log("VALID", "Flag", "--show-log activated")
 
-    def handle_silent(
-            values
-        ) -> None:
-        if ctx.verbose:
-            print(Text(" ").debug(title=True), Text("Flag: -s/--silent").debug(), Text("(on)").valid().italic())
-        ctx.log.log("VALID", "Flag", "-s/--silent activated")
+    def handle_silent(_):
         ctx.silent = 1
+        ctx.log.log("VALID", "Flag", "-s activated")
 
-    def handle_super_silent(
-            values
-        ) -> None:
-        if ctx.verbose:
-            print(Text(" ").debug(title=True), Text("Flag: --super-silent").debug(), Text("(full)").valid().italic())
-        ctx.log.log("VALID", "Flag", "--super-silent activated")
+    def handle_super_silent(_):
         ctx.silent = 2
+        ctx.log.log("VALID", "Flag", "--super-silent activated")
 
-    def handle_extreme_silent(
-            values
-        ) -> None:
-        if ctx.verbose:
-            print(Text(" ").debug(title=True), Text("Flag: --extreme-silent").debug(), Text("(full)").valid().italic())
-        ctx.log.log("VALID", "Flag", "--extreme-silent activated")
+    def handle_extreme_silent(_):
         ctx.silent = 3
+        ctx.log.log("VALID", "Flag", "--extreme-silent activated")
 
-    def handle_root(
-            values
-        ) -> None:
-        if ctx.verbose:
-            print(Text(" ").debug(title=True), Text("Flag: -r/--root").debug(), Text("(used)").info().italic())
-
+    def handle_root(values):
         ctx.root = values[0]
-        ctx.log.log("VALID", "Flag", f"-r/--root set to {repr(ctx.root)}")
+        ctx.log.log("VALID", "Flag", f"-r set to {ctx.root}")
 
-    def handle_exclude(
-            values
-        ) -> None:
-        if ctx.verbose:
-            print(Text(" ").debug(title=True), Text("Flag: -e/--exclude").debug(), Text("(used)").info().italic())
-
-        collected = []
+    def handle_exclude(values):
+        flat = []
         for v in values:
-            if " " in v:
-                collected.extend(v.split(" "))
-            else:
-                collected.append(v)
+            flat.extend(v.split(" "))
 
-        if not collected:
-            error("-e/--exclude missing values", ctx)
+        ctx.exclude.extend([x for x in flat if x and x not in ctx.exclude])
 
-        for path in collected:
-            if path not in ctx.exclude:
-                ctx.exclude.append(path)
+        ctx.log.log("VALID", "Flag", f"-e set")
 
-        ctx.log.log("VALID", "Flag", f"-e/--exclude set to {repr(ctx.exclude)}")
-
-    def handle_rule(values) -> None:
-        if ctx.verbose:
-            print(
-                Text(" ").debug(title=True),
-                Text("Flag: -R/--rule").debug(),
-                Text("(used)").info().italic()
-            )
-
-        if len(values) == 0:
-            error("-R/--rule requires arguments", ctx)
-
+    # =========================
+    # RULE SELECTION (UPDATED)
+    # =========================
+    def handle_rule(values):
         if len(values) % 2 != 0:
-            error("-R/--rule expects pairs: <CATEGORY> <RULE>", ctx)
+            error("-R expects <CATEGORY> <RULE> pairs", ctx)
 
-        new_rules = {
-            "CUSTOM": {
-                "name": "Custom Rule Selection",
-                "info": "\nRules selected when calling JCCS\n"
-            }
-        }
-
+        pairs = []
         for i in range(0, len(values), 2):
-            cat = values[i]
-            rule = values[i + 1]
+            pairs.append((values[i], values[i + 1]))
 
-            if cat not in ctx.rules:
-                error(f"Category {cat} doesn't exist", ctx)
+        try:
+            ctx.rules = ctx.rules.select(pairs)
+        except Exception as e:
+            error(str(e), ctx)
 
-            if rule not in ctx.rules[cat]:
-                error(f"Rule {rule} doesn't exist in {cat}", ctx)
+        ctx.log.log("VALID", "Flag", "-R applied")
 
-            new_rules["CUSTOM"][rule] = ctx.rules[cat][rule]
-
-        ctx.rules = new_rules
-
-        ctx.log.log("VALID", "Flag", "-R/--rule new rules set")
-
-    def handle_set(values) -> None:
-        if ctx.verbose:
-            print(
-                Text(" ").debug(title=True),
-                Text("Flag: -S/--set").debug(),
-                Text("(used)").info().italic()
-            )
-
+    # =========================
+    # RULE SETTING (UPDATED)
+    # =========================
+    def handle_set(values):
         if len(values) != 4:
-            error("-S/--set requires exactly 4 arguments: <CATEGORY> <RULE> <ARG> <VALUE>", ctx)
+            error("-S requires <CATEGORY> <RULE> <ARG> <VALUE>", ctx)
 
-        cat, rule, varg, val = values
+        cat, rule_name, arg, val = values
 
-        if cat not in ctx.rules:
-            error(f"Category {cat} doesn't exist", ctx)
+        try:
+            category = ctx.rules.get_category(cat)
+            rule = category[rule_name]
+        except Exception as e:
+            error(str(e), ctx)
 
-        if rule not in ctx.rules[cat]:
-            error(f"Rule {rule} doesn't exist in {cat}", ctx)
+        if arg not in rule.variables:
+            error(f"{rule_name} has no argument {arg}", ctx)
 
-        if varg not in ctx.rules[cat][rule]["arguments"]:
-            error(f"{rule} has no argument {varg}", ctx)
-
-        ctx.rules[cat][rule]["arguments"][varg] = val
-
-        ctx.log.log("VALID", "Flag", f"-S set {cat}/{rule}/{varg} to {val}")
+        rule.variables[arg] = val
+        ctx.log.log("VALID", "Flag", f"-S set {cat}/{rule_name}/{arg}")
 
     # =========================
-    # FLAGS LIST
+    # FLAGS
     # =========================
-
     FLAGS: list[Flag] = [
         Flag(["-j", "--json-log"], handler=handle_json),
         Flag(["-V", "--verbose"], handler=handle_verbose),
@@ -253,14 +194,11 @@ def parse_args(
         Flag(["--extreme-silent"], handler=handle_extreme_silent),
 
         Flag(["-r", "--root"], has_value=True, handler=handle_root),
-
         Flag(["-e", "--exclude"], has_value=True, multi=True, handler=handle_exclude),
 
         Flag(["-R", "--rule"], has_value=True, multi=True, handler=handle_rule),
-
         Flag(["-S", "--set"], has_value=True, multi=True, handler=handle_set),
 
-        # special built-ins
         Flag(["-h"], handler="usage"),
         Flag(["--help"], handler="help"),
         Flag(["-v", "--version"], handler="version"),
@@ -268,58 +206,63 @@ def parse_args(
         Flag(["--update"], handler="update"),
     ]
 
+    # =========================
+    # MAIN LOOP
+    # =========================
     while i < len(argv):
         arg = argv[i]
 
         if not arg.startswith("-"):
-            error(f"invalid argument ({arg})", ctx)
+            error(f"invalid argument {arg}", ctx)
 
         flag = next((f for f in FLAGS if arg in f.names), None)
 
         if not flag:
-            error(f"invalid flag ({arg})", ctx)
-            continue
+            error(f"unknown flag {arg}", ctx)
 
-        # special actions
+        # built-ins
         if flag.handler == "usage":
+            ctx.log.log("VALID", "Flag", "-h called")
             Helper.print_usage(simplename)
-            exit(EXIT_SUCCESS)
+            log_exit(ctx)
 
         if flag.handler == "help":
+            ctx.log.log("VALID", "Flag", "--help called")
             Helper.print_help(simplename, fullname, version, author, email)
-            exit(EXIT_SUCCESS)
+            log_exit(ctx)
 
         if flag.handler == "version":
-            print(Text(f"{simplename} ({fullname})").bold(), Text(version).italic())
-            exit(EXIT_SUCCESS)
+            ctx.log.log("VALID", "Flag", "-v/--version called")
+            print(Text(version).bold())
+            log_exit(ctx)
 
         if flag.handler == "arguments":
+            ctx.log.log("VALID", "Flag", "-a/--show-arguments called")
             Helper.show_arguments(ctx.rules)
-            exit(EXIT_SUCCESS)
+            log_exit(ctx)
 
         if flag.handler == "update":
+            ctx.log.log("VALID", "Flag", "--update called")
             update_jccs()
-            exit(EXIT_SUCCESS)
+            log_exit(ctx)
 
-        # collect values
+        # value parsing
         values = []
 
         if flag.has_value:
             i += 1
-
             while i < len(argv) and not argv[i].startswith("-"):
                 values.append(argv[i])
                 i += 1
-
                 if not flag.multi:
                     break
 
             if not values:
-                error(f"missing argument for {arg}", ctx)
+                error(f"missing value for {arg}", ctx)
         else:
             i += 1
 
-        # call handler
+        # execute handler
         if callable(flag.handler):
             flag(values)
 

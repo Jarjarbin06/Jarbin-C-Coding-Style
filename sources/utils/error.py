@@ -6,7 +6,10 @@
 ### by JARJARBIN's STUDIO ###
 #############################
 
+from jarbin_toolkit_console.ANSI import Color
 from jarbin_toolkit_error import Error
+
+from program.helper import get_color
 
 class RuleError(Error):
     """
@@ -22,8 +25,7 @@ class RuleError(Error):
             message : str = "a rule wasn't followed",
 
             *,
-            link : tuple[str , int | None] | None = None,
-            level : str = "INFO"
+            level : int = -1
         ) -> None:
         """
             Create an Error.
@@ -34,17 +36,8 @@ class RuleError(Error):
                 link (tuple[str, int | None] | None, optional): The link to where the error comes from (file and line).
         """
 
-        super().__init__(message, error=error, link=link)
-        if level == "FATAL":
-            self.level_color = 95
-        elif level == "MAJOR":
-            self.level_color = 91
-        elif level == "MINOR":
-            self.level_color = 93
-        elif level == "INFO":
-            self.level_color = 96
-        else:
-            self.level_color = 97
+        super().__init__(message, error=error)
+        self.level = level
 
     def __str__(
             self,
@@ -56,18 +49,23 @@ class RuleError(Error):
                 str: String representation of the error.
         """
 
+        reset = Color(Color.C_RESET)
+
         string: str = ""
         if self.error and self.error.startswith("\n"):
             string += "\n"
-        string += f"\x1b[{self.level_color + 10}m \x1b[0m \x1b[{self.level_color}m"
+        string += f"{get_color(" ", self.level, True) + reset} {get_color("", self.level)}"
         string += (self.error if self.error else "ErrorUnknown").replace("\n", "")
         string += (":" if len(self.message) > 0 else "")
 
         if len(self.message) > 0:
+            string += f"\n{get_color(" ", self.level, True) + reset}"
             for line in self.message.splitlines():
-                string += f"\n\x1b[{self.level_color + 10}m \x1b[0m     \x1b[{self.level_color}m"
+                string += (
+                    f"\n"
+                    f"{get_color(" ", self.level, True) + reset}"
+                    f"     {get_color("", self.level)}"
+                )
                 string += line
 
-        string += (f"\n\x1b[{self.level_color + 10}m \x1b[0m \x1b[{self.level_color}m" + f"\x1b[{self.level_color + 10}m \x1b[0m\n\x1b[{self.level_color + 10}m \x1b[0m  \x1b[{self.level_color}m" + self.link) if self.link else ""
-
-        return string
+        return string + reset.s

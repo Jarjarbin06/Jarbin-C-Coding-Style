@@ -63,10 +63,11 @@ Text = Console.Text.Text
 Rules can define configurable parameters:
 
 ```python
-MY_VAR = ""
-MY_VAR_doc = "Short description of this variable."
+VAR_MY_VAR = ""
+VAR_MY_VAR_doc = "Short description of this variable."
 ```
 
+Every custom variables have to start with `VAR_`.\
 These values can be overridden at runtime via `-S / --set`.
 
 ---

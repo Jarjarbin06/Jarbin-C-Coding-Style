@@ -6,209 +6,104 @@
 ### by JARJARBIN's STUDIO ###
 #############################
 
-from typing import Callable, Any
 import jarbin_toolkit_console as Console
+
+from program.rule.rule_manager import RuleManager
 
 print = Console.Console.print
 Text = Console.Text.Text
 
-# Rules #
-RULES: dict[str, str | dict[str, str | dict[str, str | Callable | dict[str, tuple[Any, str | None]]]]] = {}
+RULE_MANAGER = RuleManager()
 ERRORS: list[str] = []
 
-## C-O - Files Organization ##
+
+# =========================
+# CATEGORY REGISTRATION
+# =========================
+def register_category(
+    key: str,
+    language: str,
+    name: str,
+    title: str,
+    info: str,
+    modules: list
+) -> None:
+    try:
+        RULE_MANAGER.add_category(language, name, title, info)
+
+        category = RULE_MANAGER.get_category(name)
+        category.fetch(modules)
+
+    except BaseException as e:
+        ERRORS.append(f"{key} rules ({name}) → {e}")
+
+
+# =========================
+# C-O — FILE ORGANIZATION
+# =========================
 try:
     from rules.O import O1, O2, O3, O4
 
-except BaseException:
-    ERRORS.append("O rules (C-O — Files Organization)")
+    register_category(
+        "O",
+        "C",
+        "O",
+        "Files Organization",
+        """Keep repository clean and structured.
+Avoid compiled, temporary, or unnecessary files.
+Use correct naming conventions and limit complexity per file.""",
+        [O1, O2, O3, O4]
+    )
 
-else:
-    RULES["O"] = {
-        "name": "C-O — Files Organization",
-        "info": """
-C-O — Files Organization
-Keep your repository clean and organized.
-Avoid compiled files (.o, .a, .so, ...), temporary files (*~, #*#), and unnecessary clutter.
-Only use .c and .h extensions for source files.
-Each source file should represent a single logical entity, grouping related functions.
-Limit files to 10 functions (max 5 non-static) before splitting into sub-entities.
-File and folder names must be clear, descriptive, in English, and follow snake_case conventions.
-"""
-    }
+except BaseException as e:
+    ERRORS.append(f"O rules (C-O) → {e}")
 
-    RULES["O"][O1.name] = {
-        "info": O1.info,
-        "check": O1.check,
-        "arguments": {
-            "UNAUTHORIZED_EXTENSIONS": (O1.UNAUTHORIZED_EXTENSIONS, O1.UNAUTHORIZED_EXTENSIONS_doc),
-            "EXCLUDED_FOLDERS": (O1.EXCLUDED_FOLDERS, O1.EXCLUDED_FOLDERS_doc)
-        },
-        "level": O1.level
-    }
-    RULES["O"][O2.name] = {
-        "info": O2.info,
-        "check": O2.check,
-        "arguments": {
-            "AUTHORIZED_EXTENSIONS": (O2.AUTHORIZED_EXTENSIONS, O2.AUTHORIZED_EXTENSIONS_doc),
-            "INCLUDED_FOLDERS": (O2.INCLUDED_FOLDERS, O2.INCLUDED_FOLDERS_doc)
-        },
-        "level": O2.level
-    }
-    RULES["O"][O3.name] = {
-        "info": O3.info,
-        "check": O3.check,
-        "arguments": {
-            "CHECKED_EXTENSIONS": (O3.CHECKED_EXTENSIONS, O3.CHECKED_EXTENSIONS_doc),
-            "INCLUDED_FOLDERS": (O3.INCLUDED_FOLDERS, O3.INCLUDED_FOLDERS_doc)
-        },
-        "level": O3.level
-    }
-    RULES["O"][O4.name] = {
-        "info": O4.info,
-        "check": O4.check,
-        "arguments": {
-            "GENERIC_NAMES": (O4.GENERIC_NAMES, O4.GENERIC_NAMES_doc)
-        },
-        "level": O4.level
-    }
 
-## C-G - Global Scope ##
+# =========================
+# C-G — GLOBAL SCOPE
+# =========================
 try:
     from rules.G import G1, G2, G3, G4, G5, G6, G7, G8, G9, G10
 
-except BaseException:
-    ERRORS.append("G rules (C-G — Global Scope)")
+    register_category(
+        "G",
+        "C",
+        "G",
+        "Global Scope",
+        """Enforces coding style rules for global scope usage, formatting,
+headers, includes, and structural constraints.""",
+        [G1, G2, G3, G4, G5, G6, G7, G8, G9, G10]
+    )
 
-else:
-    RULES["G"] = {
-        "name": "C-G — Global Scope",
-        "info": """
-C-G — Global Scope
-Multiline statements are allowed but must never use backslashes for line breaks.  
-Language extensions and non-standard features are forbidden.  
-Files must start with the official Epitech header and functions must be separated by exactly one blank line.  
-Preprocessor directives use 4-space indentation (no tabs) and only include .h files.  
-Avoid global variables (except const), enforce UNIX line endings, no trailing spaces, controlled empty lines,
-defined constants, and no inline assembly.
-"""
-    }
+except BaseException as e:
+    ERRORS.append(f"G rules (C-G) → {e}")
 
-    RULES["G"][G1.name] = {
-        "info": G1.info,
-        "check": G1.check,
-        "arguments": {
-        },
-        "level": G1.level
-    }
-    RULES["G"][G2.name] = {
-        "info": G2.info,
-        "check": G2.check,
-        "arguments": {
-        },
-        "level": G2.level
-    }
-    RULES["G"][G3.name] = {
-        "info": G3.info,
-        "check": G3.check,
-        "arguments": {
-        },
-        "level": G3.level
-    }
-    RULES["G"][G4.name] = {
-        "info": G4.info,
-        "check": G4.check,
-        "arguments": {
-        },
-        "level": G4.level
-    }
-    RULES["G"][G5.name] = {
-        "info": G5.info,
-        "check": G5.check,
-        "arguments": {
-        },
-        "level": G5.level
-    }
-    RULES["G"][G6.name] = {
-        "info": G6.info,
-        "check": G6.check,
-        "arguments": {
-        },
-        "level": G6.level
-    }
-    RULES["G"][G7.name] = {
-        "info": G7.info,
-        "check": G7.check,
-        "arguments": {
-        },
-        "level": G7.level
-    }
-    RULES["G"][G8.name] = {
-        "info": G8.info,
-        "check": G8.check,
-        "arguments": {
-        },
-        "level": G8.level
-    }
-    RULES["G"][G9.name] = {
-        "info": G9.info,
-        "check": G9.check,
-        "arguments": {
-            "AUTHORIZED_VALUES": (G9.AUTHORIZED_VALUES, G9.AUTHORIZED_VALUES_doc)
-        },
-        "level": G9.level
-    }
-    RULES["G"][G10.name] = {
-        "info": G10.info,
-        "check": G10.check,
-        "arguments": {
-        },
-        "level": G10.level
-    }
 
-## C-V - Variables And Types ##
-
-## C-A - Advanced ##
-
-## C-C - Control Structures ##
-
-## C-F - Functions ##
-
-## C-H - Header Files ##
-
-## C-L - Layout Inside A Function Scope ##
-
-## MY - My Rules ##
+# =========================
+# CUSTOM RULES
+# =========================
 try:
-    from rules.MY import MY1, MY2
+    from rules.MY import JCCS1, JCCS2
 
-except Exception:
-    ERRORS.append("MY (C-MY — My Rules)")
+    register_category(
+        "JCCS",
+        "Any",
+        "JCCS",
+        "Custom Rules",
+        """Rules not in the 'Epitech C Coding Style' that can be useful.""",
+        [JCCS1, JCCS2]
+    )
 
-else:
-    RULES["MY"] = {
-        "name": "C-MY — My Rules",
-        "info": """
-C-MY — My Rules
-Every rules made by Jarjarbin06 that can be helpful
-"""
-    }
+except BaseException as e:
+    ERRORS.append(f"MY rules → {e}")
 
-    RULES["MY"][MY1.name] = {
-        "info": MY1.info,
-        "check": MY1.check,
-        "arguments": {
-            "BANNED_FUNCTIONS": (MY1.BANNED_FUNCTIONS, MY1.BANNED_FUNCTIONS_doc)
-        },
-        "level": MY1.level
-    }
-    RULES["MY"][MY2.name] = {
-        "info": MY2.info,
-        "check": MY2.check,
-        "arguments": {
-            "BANNED_INCLUDES": (MY2.BANNED_INCLUDES, MY2.BANNED_INCLUDES_doc)
-        },
-        "level": MY2.level
-    }
+
+# =========================
+# DEBUG OUTPUT
+# =========================
+if ERRORS:
+    for err in ERRORS:
+        print(Text(err).error())
+
 
 Console.quit(delete_log=True)

@@ -31,8 +31,8 @@ print = Console.Console.print
 Text = Console.Text.Text
 
 # Custom Variables #
-MY_VAR = ""
-MY_VAR_doc = "Short description of this variable."
+VAR_MY_VAR = ""
+VAR_MY_VAR_doc = "Short description of this variable."
 
 # Regex #
 RE_MY_PATTERN = re.compile(r"...")

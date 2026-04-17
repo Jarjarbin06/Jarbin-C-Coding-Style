@@ -6,8 +6,9 @@
 ### by JARJARBIN's STUDIO ###
 #############################
 
-from typing import Callable, Any
 import jarbin_toolkit_console as Console
+
+from program.rule.rule_manager import RuleManager
 
 print = Console.Console.print
 Text = Console.Text.Text
@@ -15,61 +16,105 @@ Color = Console.ANSI.Color
 
 Console.init(banner=False)
 
-def show_arguments(
-        rules: dict[str, str | dict[str, str | dict[str, str | Callable | dict[str, Any]]]]
-    ) -> None:
+def get_color(
+        text: str,
+        level: int,
+        title: bool = False,
+    ) -> Text:
+    lvl_c = {
+        0: 96,
+        1: 93,
+        2: 91,
+        3: 95
+    }
+    t: int = 10 if title else 0
+    if level in lvl_c:
+        return Text(Color(lvl_c[level] + t) + text)
+    return Text(Color(97 + t) + text)
 
-    def get_color(text: str) -> Text:
-        level = rules[category][rule]["level"]
+def get_level(
+        level: int
+    ) -> str:
+    lvl_s = {
+        0: "INFO",
+        1: "MINOR",
+        2: "MAJOR",
+        3: "FATAL"
+    }
 
-        if level == "FATAL":
-            level_color = 95
-        elif level == "MAJOR":
-            level_color = 91
-        elif level == "MINOR":
-            level_color = 93
-        elif level == "INFO":
-            level_color = 96
-        else:
-            level_color = 97
+    if level in lvl_s:
+        return lvl_s[level]
+    return f"UNKNOWN ({level})"
 
-        return Text(Color(level_color) + text)
+def show_arguments(manager: RuleManager) -> None:
+    """
+    Displays:
+    Category → Rule → Info → Arguments
+    """
 
-    title = "   JCCS - RULES   "
-    dash_title = "-" * (len(Console.Console) - len(title))
-    dash = "-" * len(Console.Console)
-    print(dash)
-    print(dash_title[:int((len(Console.Console) - len(title)) / 2)] + title + dash_title[:int((len(Console.Console) - len(title)) / 2)])
-    print(dash)
-    last_rule = [rule for rule in rules][-1]
+    categories = list(manager.categories.values())
 
-    for category in rules:
+    print("=" * 60)
+    print(Text("   JCCS - RULES   ").bold())
+    print("=" * 60)
 
-        print(Color(Color.C_BOLD) + dash_title[:int((len(Console.Console) - len(rules[category]["name"]) + 6) / 4)].replace("-", "=") + "   " + rules[category]["name"] + "   " + dash_title[:int((len(Console.Console) - len(rules[category]["name"]) + 6) / 4)].replace("-", "="))
-        print(Text(rules[category]["info"]).dim())
+    last_category = categories[-1] if categories else None
 
-        for rule in rules[category]:
+    for category in categories:
 
-            if rule in ["name", "info"]:
-                continue
+        print(f"{Text(category.language).bold()}", end="")
+        print(f" ─ {Text(category.name).bold()}", end="")
+        print(f" ─ {Text(category.title).italic()}")
+        print(Text(category.info).dim())
+        print("─" * 60)
 
-            print(Text(rule).bold().underline(), get_color(Text(rules[category][rule]["level"]).italic()).s.lower())
-            print(Text(rules[category][rule]["info"]).dim(), end="")
-            print(Text("Arguments:"))
+        rules = list(category.rules.values())
+        last_rule = rules[-1] if rules else None
 
-            if rules[category][rule]["arguments"]:
-                for rule_arg in rules[category][rule]["arguments"]:
-                    arg = rules[category][rule]["arguments"][rule_arg]
-                    print(f"  - {rule_arg} : \"{arg[0]}\"\n\t{Text(f"[ {f"{arg[1]}" if arg[1] is not None else "No description"} ]").italic().dim()}")
+        for rule in rules:
 
+            # RULE HEADER
+
+            print(f"{Text(rule.language).italic().bold()}", end="")
+            print(f" ─ {Text(rule.name).underline().bold()}")
+            print(Text(rule.info).dim())
+
+            print(Text(f"Level: {get_color(get_level(rule.level), rule.level)}").italic())
+
+            # ARGUMENTS
+            print(Text("Arguments:").bold())
+
+            if not rule.variables:
+                print(Text("  (no argument)").italic().dim())
             else:
-                print(Text("\t(no argument)").italic())
+                for arg_name, arg_value in rule.variables.items():
 
-            if rule != last_rule:
-                print("-" * len(Console.Console))
+                    # expected format: VAR_NAME = value or tuple/list
+                    value = arg_value
 
-    print(dash)
-    print(dash)
+                    desc = None
+                    if isinstance(arg_value, (tuple, list)) and len(arg_value) >= 2:
+                        value = arg_value[0]
+                        desc = arg_value[1]
+
+                    print(
+                        f"  - {arg_name.removeprefix("VAR_")} : \"{value}\"",
+                        end=""
+                    )
+
+                    if desc:
+                        print(f"\n    {Text(f"[ {desc} ]").italic().dim()}")
+                    else:
+                        print(f"\n    {Text("[ No description ]").italic().dim()}")
+
+            if rule is not last_rule:
+                print("─" * 60)
+
+        if category is not last_category:
+            print("\n" + "═" * 60)
+
+
+    print("═" * 60)
 
 def print_help(
         simplename: str,
