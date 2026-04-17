@@ -14,7 +14,7 @@ info = f"""
 {language}-{name} - Separation of functions
 Inside a source file, implementations of functions must be separated by one and only one empty line.
 """
-level = "MINOR"
+level = 1
 
 # Imports #
 import jarbin_toolkit_console as Console
@@ -62,13 +62,11 @@ def get_line_error(file: str) -> str:
 
     return ""
 
-
 def check(
         paths,
         **kwargs
     ) -> list[RuleError] | None:
 
-    kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
 

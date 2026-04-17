@@ -15,7 +15,7 @@ info = f"""
 Global variables must be avoided as much as possible.
 Only global constants should be used.
 """
-level = "MAJOR"
+level = 2
 
 # Imports #
 import re
@@ -73,7 +73,6 @@ def get_global_variable_error(file: str) -> str:
 
 def check(paths, **kwargs) -> list[RuleError] | None:
 
-    kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
 

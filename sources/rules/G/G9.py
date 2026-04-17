@@ -17,7 +17,7 @@ This greatly helps you when you want to modify an important value in your progra
 need to find all occurences of this value scattered throughout your code, and only need to change it in one
 place.
 """
-level = "MINOR"
+level = 1
 
 # Imports #
 import re
@@ -32,8 +32,8 @@ print = Console.Console.print
 Text = Console.Text.Text
 
 # Custom Variables #
-AUTHORIZED_VALUES = "NULL"
-AUTHORIZED_VALUES_doc = "Allowed hard coded values"
+VAR_AUTHORIZED_VALUES = "NULL"
+VAR_AUTHORIZED_VALUES_doc = "Allowed hard coded values"
 
 # Regex #
 RE_ARRAY_SIZE = re.compile(r'\[\s*([0-9]+)\s*\]')
@@ -67,7 +67,7 @@ def get_line_error(file: str) -> str:
 
                 if is_literal:
                     valid = False
-                    for authed_val in AUTHORIZED_VALUES.split():
+                    for authed_val in VAR_AUTHORIZED_VALUES.split():
                         if value == authed_val:
                             valid = True
                             break
@@ -85,7 +85,7 @@ def get_line_error(file: str) -> str:
             value = match_array.group(1)
 
             valid = False
-            for authed_val in AUTHORIZED_VALUES.split():
+            for authed_val in VAR_AUTHORIZED_VALUES.split():
                 if value == authed_val:
                     valid = True
                     break
@@ -101,16 +101,15 @@ def get_line_error(file: str) -> str:
 
 def check(paths, **kwargs) -> list[RuleError] | None:
 
-    kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
 
     # Custom variables #
-    global AUTHORIZED_VALUES
-    AUTHORIZED_VALUES = kwargs.get("AUTHORIZED_VALUES", AUTHORIZED_VALUES)
+    global VAR_AUTHORIZED_VALUES
+    VAR_AUTHORIZED_VALUES = kwargs.get("VAR_AUTHORIZED_VALUES", VAR_AUTHORIZED_VALUES)
 
-    if isinstance(AUTHORIZED_VALUES, tuple):
-        AUTHORIZED_VALUES = AUTHORIZED_VALUES[0]
+    if isinstance(VAR_AUTHORIZED_VALUES, tuple):
+        VAR_AUTHORIZED_VALUES = VAR_AUTHORIZED_VALUES[0]
 
     if verbose:
         print(

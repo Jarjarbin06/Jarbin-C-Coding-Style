@@ -14,7 +14,7 @@ info = f"""
 {language}-{name} - File extension
 Sources in a C program must only have .c or .h extensions
 """
-level = "MAJOR"
+level = 2
 
 # Imports #
 import re
@@ -26,10 +26,10 @@ print = Console.Console.print
 Text = Console.Text.Text
 
 # Custom Variables #
-AUTHORIZED_EXTENSIONS = "c h"
-AUTHORIZED_EXTENSIONS_doc = "List of allowed file extensions for source files."
-INCLUDED_FOLDERS = "sources includes tests"
-INCLUDED_FOLDERS_doc = "List of folders where files are checked by this rule."
+VAR_AUTHORIZED_EXTENSIONS = "c h"
+VAR_AUTHORIZED_EXTENSIONS_doc = "List of allowed file extensions for source files."
+VAR_INCLUDED_FOLDERS = "sources includes tests"
+VAR_INCLUDED_FOLDERS_doc = "List of folders where files are checked by this rule."
 
 # Regex #
 RE_INCLUDED_PATTERN = None
@@ -42,19 +42,18 @@ def check(
         **kwargs
     ) -> list[RuleError] | None:
 
-    kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
 
     # Custom variables #
-    global AUTHORIZED_EXTENSIONS,INCLUDED_FOLDERS
-    AUTHORIZED_EXTENSIONS = kwargs.get("AUTHORIZED_EXTENSIONS", AUTHORIZED_EXTENSIONS)
-    INCLUDED_FOLDERS = kwargs.get("INCLUDED_FOLDERS", INCLUDED_FOLDERS)
+    global VAR_AUTHORIZED_EXTENSIONS,VAR_INCLUDED_FOLDERS
+    VAR_AUTHORIZED_EXTENSIONS = kwargs.get("VAR_AUTHORIZED_EXTENSIONS", VAR_AUTHORIZED_EXTENSIONS)
+    VAR_INCLUDED_FOLDERS = kwargs.get("VAR_INCLUDED_FOLDERS", VAR_INCLUDED_FOLDERS)
 
-    if isinstance(AUTHORIZED_EXTENSIONS, tuple):
-        AUTHORIZED_EXTENSIONS = AUTHORIZED_EXTENSIONS[0]
-    if isinstance(INCLUDED_FOLDERS, tuple):
-        INCLUDED_FOLDERS = INCLUDED_FOLDERS[0]
+    if isinstance(VAR_AUTHORIZED_EXTENSIONS, tuple):
+        VAR_AUTHORIZED_EXTENSIONS = VAR_AUTHORIZED_EXTENSIONS[0]
+    if isinstance(VAR_INCLUDED_FOLDERS, tuple):
+        VAR_INCLUDED_FOLDERS = VAR_INCLUDED_FOLDERS[0]
 
     if verbose:
         print(
@@ -65,11 +64,11 @@ def check(
     # Regex re-compiling #
     global RE_INCLUDED_PATTERN, RE_AUTHORIZED_PATTERN
     RE_INCLUDED_PATTERN = re.compile(
-        rf"(?:^|/)(?:{'|'.join(map(re.escape, INCLUDED_FOLDERS.split()))})(?:/)",
+        rf"(?:^|/)(?:{'|'.join(map(re.escape, VAR_INCLUDED_FOLDERS.split()))})(?:/)",
         re.IGNORECASE
     )
     RE_AUTHORIZED_PATTERN = re.compile(
-        rf"^({'|'.join(map(re.escape, AUTHORIZED_EXTENSIONS.split()))})$",
+        rf"^({'|'.join(map(re.escape, VAR_AUTHORIZED_EXTENSIONS.split()))})$",
         re.IGNORECASE
     )
 
@@ -82,7 +81,7 @@ def check(
             if verbose == 2:
                 print(
                     Text(" ").debug(title=True),
-                    Text(f"C-{name}: {file} not in INCLUDED_FOLDERS").debug(),
+                    Text(f"C-{name}: {file} not in VAR_INCLUDED_FOLDERS").debug(),
                     Text("(skip)").info().italic()
                 )
             return True

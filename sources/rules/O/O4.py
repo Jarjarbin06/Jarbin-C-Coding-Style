@@ -16,7 +16,7 @@ The name of the file must define the logical entity it represents, and thus be c
 unambiguous.
 All file names and folders must be in English, according to the snake_case convention (that is, only composed of lowercase, numbers, and underscores).
 """
-level = "MINOR"
+level = 1
 
 # Imports #
 import re
@@ -28,40 +28,32 @@ print = Console.Console.print
 Text = Console.Text.Text
 
 # Custom Variables #
-ALLOWED_CHARS = r"^[a-z0-9_/\.]+$"
-ALLOWED_CHARS_doc = "Regex pattern checking for invalid characters for files."
-SNAKE_CASE = r"^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
-SNAKE_CASE_doc = "Regex pattern enforcing snake_case naming convention for files and optional extensions."
-GENERIC_NAMES = "algo file tmp temp misc stuff code"
-GENERIC_NAMES_doc = "List of generic names to check."
+VAR_GENERIC_NAMES = "algo file tmp temp misc stuff code"
+VAR_GENERIC_NAMES_doc = "List of generic names to check."
 
 # Regex #
-RE_GENERIC_NAMES_PATTERN = None
-RE_VALID_PATH_PATTERN = re.compile(ALLOWED_CHARS)
-RE_SNAKE_CASE_PATTERN = re.compile(SNAKE_CASE)
+RE_ALLOWED_CHARS = r"^[a-z0-9_/\.]+$"
+RE_SNAKE_CASE = r"^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+RE_VAR_GENERIC_NAMES_PATTERN = None
+RE_VALID_PATH_PATTERN = re.compile(RE_ALLOWED_CHARS)
+RE_SNAKE_CASE_PATTERN = re.compile(RE_SNAKE_CASE)
 
 # Checker #
 def check(paths, **kwargs) -> list[RuleError] | None:
 
-    kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
     root = kwargs.get("root", 0)
 
-    global SNAKE_CASE, GENERIC_NAMES
-    SNAKE_CASE = kwargs.get("SNAKE_CASE", SNAKE_CASE)
-    GENERIC_NAMES = kwargs.get("GENERIC_NAMES", GENERIC_NAMES)
+    global VAR_GENERIC_NAMES
+    VAR_GENERIC_NAMES = kwargs.get("VAR_GENERIC_NAMES", VAR_GENERIC_NAMES)
 
-    if isinstance(SNAKE_CASE, tuple):
-        SNAKE_CASE = SNAKE_CASE[0]
-    if isinstance(GENERIC_NAMES, tuple):
-        GENERIC_NAMES = GENERIC_NAMES[0]
+    if isinstance(VAR_GENERIC_NAMES, tuple):
+        VAR_GENERIC_NAMES = VAR_GENERIC_NAMES[0]
 
-    global RE_SNAKE_CASE_PATTERN, RE_GENERIC_NAMES_PATTERN
-    RE_SNAKE_CASE_PATTERN = re.compile(SNAKE_CASE)
-
-    RE_GENERIC_NAMES_PATTERN = re.compile(
-        rf"^({'|'.join(map(re.escape, GENERIC_NAMES.split()))})$",
+    global RE_VAR_GENERIC_NAMES_PATTERN
+    RE_VAR_GENERIC_NAMES_PATTERN = re.compile(
+        rf"^({'|'.join(map(re.escape, VAR_GENERIC_NAMES.split()))})$",
         re.IGNORECASE
     )
 
@@ -101,7 +93,7 @@ def check(paths, **kwargs) -> list[RuleError] | None:
                 )
             return False
 
-        if RE_GENERIC_NAMES_PATTERN.search(name_no_ext):
+        if RE_VAR_GENERIC_NAMES_PATTERN.search(name_no_ext):
             if verbose:
                 print(
                     Text(" ").debug(title=True),

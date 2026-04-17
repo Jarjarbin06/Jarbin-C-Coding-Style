@@ -8,13 +8,13 @@
 
 # INFO #
 language = "C"
-category = "MY"
+category = "JCCS"
 name = f"{category}1"
 info = f"""
 {language}-{name} - banned functions
 Files must not contain any banned functions.
 """
-level = "FATAL"
+level = 3
 
 # Imports #
 import re
@@ -30,8 +30,8 @@ print = Console.Console.print
 Text = Console.Text.Text
 
 # Custom Variables #
-BANNED_FUNCTIONS = ""
-BANNED_FUNCTIONS_doc = "Space-separated list of forbidden function names that must not appear in source files."
+VAR_BANNED_FUNCTIONS = ""
+VAR_BANNED_FUNCTIONS_doc = "Space-separated list of forbidden function names that must not appear in source files."
 
 # Regex #
 
@@ -58,16 +58,15 @@ def check(
         **kwargs
     ) -> list[RuleError] | None:
 
-    kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
 
     # Custom variables #
-    global BANNED_FUNCTIONS
-    BANNED_FUNCTIONS = kwargs.get("BANNED_FUNCTIONS", BANNED_FUNCTIONS)
+    global VAR_BANNED_FUNCTIONS
+    VAR_BANNED_FUNCTIONS = kwargs.get("VAR_BANNED_FUNCTIONS", VAR_BANNED_FUNCTIONS)
 
-    if isinstance(BANNED_FUNCTIONS, tuple):
-        BANNED_FUNCTIONS = BANNED_FUNCTIONS[0]
+    if isinstance(VAR_BANNED_FUNCTIONS, tuple):
+        VAR_BANNED_FUNCTIONS = VAR_BANNED_FUNCTIONS[0]
 
     # Regex re-compiling #
 
@@ -89,7 +88,7 @@ def check(
                 )
             return True
 
-        error = get_function_error(file, BANNED_FUNCTIONS)
+        error = get_function_error(file, VAR_BANNED_FUNCTIONS)
 
         if error:
             if verbose:
@@ -115,7 +114,7 @@ def check(
             assert check_file_ext(file), (
                 f"{file}\n"
                 "Banned functions must be avoided at all cost\n\n"
-                f"{get_function_error(file, BANNED_FUNCTIONS)}"
+                f"{get_function_error(file, VAR_BANNED_FUNCTIONS)}"
             )
 
         except AssertionError as error:

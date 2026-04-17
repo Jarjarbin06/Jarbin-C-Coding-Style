@@ -15,7 +15,7 @@ info = f"""
 Inline assembly must never be used.
 Programming in C must be done... in C.
 """
-level = "FATAL"
+level = 3
 
 # Imports #
 import re
@@ -58,7 +58,6 @@ def get_line_error(file: str) -> str:
 
 def check(paths, **kwargs) -> list[RuleError] | None:
 
-    kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
 

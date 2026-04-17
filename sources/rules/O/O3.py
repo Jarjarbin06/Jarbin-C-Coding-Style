@@ -16,7 +16,7 @@ A source file must match a logical entity, and group all the functions associate
 Grouping functions that are not related to each other in the same file has to be avoided.
 You are allowed to have 10 functions (including at most 5 non-static functions) in total per file.
 """
-level = "MAJOR"
+level = 2
 
 # Imports #
 import re
@@ -28,10 +28,10 @@ print = Console.Console.print
 Text = Console.Text.Text
 
 # Custom Variables #
-CHECKED_EXTENSIONS = "c"
-CHECKED_EXTENSIONS_doc = "List of file extensions analyzed for function coherence."
-INCLUDED_FOLDERS = "sources"
-INCLUDED_FOLDERS_doc = "List of folders where files are checked by this rule."
+VAR_CHECKED_EXTENSIONS = "c"
+VAR_CHECKED_EXTENSIONS_doc = "List of file extensions analyzed for function coherence."
+VAR_INCLUDED_FOLDERS = "sources"
+VAR_INCLUDED_FOLDERS_doc = "List of folders where files are checked by this rule."
 
 # Regex #
 RE_INCLUDED_PATTERN = None
@@ -45,19 +45,18 @@ def check(
         **kwargs
     ) -> list[RuleError] | None:
 
-    kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
 
     # Custom variables #
-    global CHECKED_EXTENSIONS, INCLUDED_FOLDERS
-    CHECKED_EXTENSIONS = kwargs.get("CHECKED_EXTENSIONS", CHECKED_EXTENSIONS)
-    INCLUDED_FOLDERS = kwargs.get("INCLUDED_FOLDERS", INCLUDED_FOLDERS)
+    global VAR_CHECKED_EXTENSIONS, VAR_INCLUDED_FOLDERS
+    VAR_CHECKED_EXTENSIONS = kwargs.get("VAR_CHECKED_EXTENSIONS", VAR_CHECKED_EXTENSIONS)
+    VAR_INCLUDED_FOLDERS = kwargs.get("VAR_INCLUDED_FOLDERS", VAR_INCLUDED_FOLDERS)
 
-    if isinstance(CHECKED_EXTENSIONS, tuple):
-        CHECKED_EXTENSIONS = CHECKED_EXTENSIONS[0]
-    if isinstance(INCLUDED_FOLDERS, tuple):
-        INCLUDED_FOLDERS = INCLUDED_FOLDERS[0]
+    if isinstance(VAR_CHECKED_EXTENSIONS, tuple):
+        VAR_CHECKED_EXTENSIONS = VAR_CHECKED_EXTENSIONS[0]
+    if isinstance(VAR_INCLUDED_FOLDERS, tuple):
+        VAR_INCLUDED_FOLDERS = VAR_INCLUDED_FOLDERS[0]
 
     if verbose:
         print(
@@ -68,11 +67,11 @@ def check(
     # Regex re-compiling #
     global RE_INCLUDED_PATTERN, RE_AUTHORIZED_PATTERN, RE_FUNCTION_PATTERN
     RE_INCLUDED_PATTERN = re.compile(
-        rf"(?:^|/)(?:{'|'.join(map(re.escape, INCLUDED_FOLDERS.split()))})(?:/)",
+        rf"(?:^|/)(?:{'|'.join(map(re.escape, VAR_INCLUDED_FOLDERS.split()))})(?:/)",
         re.IGNORECASE
     )
     RE_AUTHORIZED_PATTERN = re.compile(
-        rf"^({'|'.join(map(re.escape, CHECKED_EXTENSIONS.split()))})$",
+        rf"^({'|'.join(map(re.escape, VAR_CHECKED_EXTENSIONS.split()))})$",
         re.IGNORECASE
     )
     RE_FUNCTION_PATTERN = re.compile(
@@ -87,7 +86,7 @@ def check(
             if verbose == 2:
                 print(
                     Text(" ").debug(title=True),
-                    Text(f"C-{name}: {file} not in INCLUDED_FOLDERS").debug(),
+                    Text(f"C-{name}: {file} not in VAR_INCLUDED_FOLDERS").debug(),
                     Text("(skip)").info().italic()
                 )
             return True
@@ -112,7 +111,7 @@ def check(
                 )
             return True
 
-        if not file_ext.lower() in CHECKED_EXTENSIONS:
+        if not file_ext.lower() in VAR_CHECKED_EXTENSIONS:
             if verbose:
                 print(
                     Text(" ").debug(title=True),

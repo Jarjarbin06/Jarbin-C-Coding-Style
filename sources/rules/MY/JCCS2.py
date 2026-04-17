@@ -8,13 +8,13 @@
 
 # INFO #
 language = "C"
-category = "MY"
+category = "JCCS"
 name = f"{category}2"
 info = f"""
 {language}-{name} - banned includes
 Files must not contain any banned includes.
 """
-level = "FATAL"
+level = 3
 
 # Imports #
 import re
@@ -30,8 +30,8 @@ print = Console.Console.print
 Text = Console.Text.Text
 
 # Custom Variables #
-BANNED_INCLUDES = ""
-BANNED_INCLUDES_doc = "Space-separated list of forbidden C header files (without or with .h extension)."
+VAR_BANNED_INCLUDES = ""
+VAR_BANNED_INCLUDES_doc = "Space-separated list of forbidden C header files (without or with .h extension)."
 
 # Regex #
 
@@ -64,16 +64,15 @@ def check(
         **kwargs
     ) -> list[RuleError] | None:
 
-    kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
 
     # Custom variables #
-    global BANNED_INCLUDES
-    BANNED_INCLUDES = kwargs.get("BANNED_INCLUDES", BANNED_INCLUDES)
+    global VAR_BANNED_INCLUDES
+    VAR_BANNED_INCLUDES = kwargs.get("VAR_BANNED_INCLUDES", VAR_BANNED_INCLUDES)
 
-    if isinstance(BANNED_INCLUDES, tuple):
-        BANNED_INCLUDES = BANNED_INCLUDES[0]
+    if isinstance(VAR_BANNED_INCLUDES, tuple):
+        VAR_BANNED_INCLUDES = VAR_BANNED_INCLUDES[0]
 
     if verbose:
         print(
@@ -95,7 +94,7 @@ def check(
                 )
             return True
 
-        error = get_include_error(file, BANNED_INCLUDES)
+        error = get_include_error(file, VAR_BANNED_INCLUDES)
 
         if error:
             if verbose:
@@ -121,7 +120,7 @@ def check(
             assert check_file_ext(file), (
                 f"{file}\n"
                 "Banned includes must be avoided at all cost\n\n"
-                f"{get_include_error(file, BANNED_INCLUDES)}"
+                f"{get_include_error(file, VAR_BANNED_INCLUDES)}"
             )
 
         except AssertionError as error:

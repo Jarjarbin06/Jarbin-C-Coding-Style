@@ -14,7 +14,7 @@ info = f"""
 {language}-{name} - Trailing spaces
 No trailing spaces must be present at the end of a line.
 """
-level = "MINOR"
+level = 1
 
 # Imports #
 import re
@@ -55,7 +55,6 @@ def get_line_error(file: str) -> str:
 
 def check(paths, **kwargs) -> list[RuleError] | None:
 
-    kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
 

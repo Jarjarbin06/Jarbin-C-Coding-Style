@@ -14,7 +14,7 @@ info = f"""
 {language}-{name} - Indentation of preprocessor directives
 The preprocessor directives must be indented according to the level of indirection.
 """
-level = "MINOR"
+level = 1
 
 # Imports #
 import re
@@ -75,7 +75,6 @@ def check(
         **kwargs
     ) -> list[RuleError] | None:
 
-    kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
 

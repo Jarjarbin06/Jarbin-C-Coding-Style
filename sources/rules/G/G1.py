@@ -14,7 +14,7 @@ info = f"""
 {language}-{name} - File header
 C files (.c, .h, ...) and every Makefiles must always start with the standard header of the school.
 """
-level = "MINOR"
+level = 1
 
 # Imports #
 import jarbin_toolkit_console as Console
@@ -31,7 +31,6 @@ Text = Console.Text.Text
 # Checker #
 def check(paths, **kwargs) -> list[RuleError] | None:
 
-    kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
 

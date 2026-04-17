@@ -14,7 +14,7 @@ info = f"""
 {language}-{name} - Contents of the repository
 The repository must not contain compiled (.o, .a, .so, ...), temporary or unnecessary files (*~, #*#, etc.).
 """
-level = "MAJOR"
+level = 2
 
 # Imports #
 import re
@@ -26,10 +26,10 @@ print = Console.Console.print
 Text = Console.Text.Text
 
 # Custom Variables #
-UNAUTHORIZED_EXTENSIONS = "o a so out gcda gcno gch pch swp swo tmp bak"
-UNAUTHORIZED_EXTENSIONS_doc = "List of forbidden file extensions (compiled, temporary, or unnecessary files)."
-EXCLUDED_FOLDERS = "bonus"
-EXCLUDED_FOLDERS_doc = "List of folders excluded from the check (files inside are ignored)."
+VAR_UNAUTHORIZED_EXTENSIONS = "o a so out gcda gcno gch pch swp swo tmp bak"
+VAR_UNAUTHORIZED_EXTENSIONS_doc = "List of forbidden file extensions (compiled, temporary, or unnecessary files)."
+VAR_EXCLUDED_FOLDERS = "bonus"
+VAR_EXCLUDED_FOLDERS_doc = "List of folders excluded from the check (files inside are ignored)."
 
 # Regex #
 RE_EXCLUDED_PATTERN = None
@@ -42,19 +42,18 @@ def check(
         **kwargs
     ) -> list[RuleError] | None:
 
-    kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
 
     # Custom variables #
-    global UNAUTHORIZED_EXTENSIONS, EXCLUDED_FOLDERS
-    UNAUTHORIZED_EXTENSIONS = kwargs.get("UNAUTHORIZED_EXTENSIONS", UNAUTHORIZED_EXTENSIONS)
-    EXCLUDED_FOLDERS = kwargs.get("EXCLUDED_FOLDERS", EXCLUDED_FOLDERS)
+    global VAR_UNAUTHORIZED_EXTENSIONS, VAR_EXCLUDED_FOLDERS
+    VAR_UNAUTHORIZED_EXTENSIONS = kwargs.get("VAR_UNAUTHORIZED_EXTENSIONS", VAR_UNAUTHORIZED_EXTENSIONS)
+    VAR_EXCLUDED_FOLDERS = kwargs.get("VAR_EXCLUDED_FOLDERS", VAR_EXCLUDED_FOLDERS)
 
-    if isinstance(UNAUTHORIZED_EXTENSIONS, tuple):
-        UNAUTHORIZED_EXTENSIONS = UNAUTHORIZED_EXTENSIONS[0]
-    if isinstance(EXCLUDED_FOLDERS, tuple):
-        EXCLUDED_FOLDERS = EXCLUDED_FOLDERS[0]
+    if isinstance(VAR_UNAUTHORIZED_EXTENSIONS, tuple):
+        VAR_UNAUTHORIZED_EXTENSIONS = VAR_UNAUTHORIZED_EXTENSIONS[0]
+    if isinstance(VAR_EXCLUDED_FOLDERS, tuple):
+        VAR_EXCLUDED_FOLDERS = VAR_EXCLUDED_FOLDERS[0]
 
     if verbose:
         print(
@@ -65,11 +64,11 @@ def check(
     # Regex re-compiling #
     global RE_EXCLUDED_PATTERN, RE_UNAUTHORIZED_PATTERN
     RE_EXCLUDED_PATTERN = re.compile(
-        rf"(?:^|/)(?:{'|'.join(map(re.escape, EXCLUDED_FOLDERS.split()))})(?:/)",
+        rf"(?:^|/)(?:{'|'.join(map(re.escape, VAR_EXCLUDED_FOLDERS.split()))})(?:/)",
         re.IGNORECASE
     )
     RE_UNAUTHORIZED_PATTERN = re.compile(
-        rf"^({'|'.join(map(re.escape, UNAUTHORIZED_EXTENSIONS.split()))})$",
+        rf"^({'|'.join(map(re.escape, VAR_UNAUTHORIZED_EXTENSIONS.split()))})$",
         re.IGNORECASE
     )
 
@@ -84,7 +83,7 @@ def check(
             if verbose == 2:
                 print(
                     Text(" ").debug(title=True),
-                    Text(f"C-{name}: {file} in EXCLUDED_FOLDERS (\"{folder}\")").debug(),
+                    Text(f"C-{name}: {file} in VAR_EXCLUDED_FOLDERS (\"{folder}\")").debug(),
                     Text("(skip)").info().italic()
                 )
             return True

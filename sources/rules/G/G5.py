@@ -14,7 +14,7 @@ info = f"""
 {language}-{name} - include
 include directives must only include C header (.h) files.
 """
-level = "MAJOR"
+level = 2
 
 # Imports #
 import re
@@ -67,7 +67,6 @@ def get_include_error(file: str) -> str:
 
 def check(paths, **kwargs) -> list[RuleError] | None:
 
-    kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
 

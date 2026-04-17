@@ -14,7 +14,7 @@ info = f"""
 {language}-{name} - Line endings
 Line endings must be done in UNIX style (with \"\\n\"), and must never end with a backslash (\"\\\").
 """
-level = "MINOR"
+level = 1
 
 # Imports #
 import re
@@ -58,7 +58,6 @@ def get_line_error(file: str) -> str:
 
 def check(paths, **kwargs) -> list[RuleError] | None:
 
-    kwargs = kwargs["kwargs"]
     errors = []
     verbose = kwargs.get("verbose", 0)
 
