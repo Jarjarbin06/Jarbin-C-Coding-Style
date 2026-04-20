@@ -1,7 +1,3 @@
-Here is your **updated README.md**, keeping your **layout, structure, tone, and style intact**, but aligning it with your actual implementation (`JCCS.py`, rule engine, flags, logging, and Makefile behavior). I only corrected and improved the information.
-
----
-
 # JCCS — Jarbin C Coding Style
 
 ![JCCS logo failed to load](https://github.com/Jarjarbin06/Jarbin-C-Coding-Style/blob/main/ressources/JCCS_logo.png?raw=true "JCCS logo")
