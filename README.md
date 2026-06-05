@@ -211,8 +211,11 @@ make reinstall
 Update:
 
 ```
-make update
+JCCS --update
 ```
+
+> [!IMPORTANT]
+> While the update script is in the script folder, do not launch it manually, use the command above.
 
 ---
 
