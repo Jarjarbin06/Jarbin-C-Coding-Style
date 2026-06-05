@@ -1,46 +1,153 @@
-# JCCS — Jarbin C Coding Style
-
 ![JCCS logo failed to load](https://github.com/Jarjarbin06/Jarbin-C-Coding-Style/blob/main/ressources/JCCS_logo.png?raw=true "JCCS logo")
 
-JCCS (Jarbin C Coding Style) is a modular C coding-style checker developed for Epitech projects.
-It recursively scans a project directory and validates C source files against a structured, extensible rule system inspired by the official Epitech coding-style specification.
+# 📦 JCCS — Jarbin C Coding Style
+
+> Modular and deterministic C coding-style checker designed for EPITECH projects, providing recursive analysis, rule-based validation, and CI-friendly execution.
 
 ---
 
-## 📌 Overview
+## 🔹 Short Description
 
-JCCS provides:
+**JCCS is a structured C coding-style validation tool that scans project directories and enforces rules based on a modular, extensible system inspired by the EPITECH coding-style specification.**
 
-* Recursive project scanning (hidden files and folders ignored)
-* Modular rule system grouped by categories (O, G, MY, etc.)
-* Runtime rule selection and dynamic argument overriding
-* Structured terminal output with colored results (OK / KO per rule)
-* Configurable logging system (JAR-LOG or JSON format)
-* Deterministic exit codes for CI and automation workflows
-* Built-in verbose and silent execution modes
-
-Each rule is independent and can be executed individually or as part of the full suite.
+It provides a flexible CLI, configurable rule execution, and deterministic outputs suitable for automation and continuous integration.
 
 ---
 
-## ⚙️ Program information
+## 🔹 Authors
 
-Use the following identifiers inside the program:
+* Nathan (Jarjarbin06)
+* EPITECH Project
+
+---
+
+## 🔹 License
+
+GPL v3
+
+---
+
+## 🔹 Target Audience
+
+JCCS is designed for:
+
+* EPITECH students validating coding-style compliance
+* C developers enforcing strict style rules
+* CI/CD pipelines requiring deterministic validation tools
+* Projects needing modular and extensible rule systems
+* Developers building custom coding-style extensions
+
+---
+
+## 🔹 Platform Support
+
+* Linux compatible
+* Python-based execution
+* No OS-specific dependencies beyond standard environment
+* CLI-oriented usage
+
+---
+
+## 🔹 Purpose
+
+JCCS aims to replace manual coding-style verification (and `epiclang`) by providing:
+
+* Recursive project scanning (excluding hidden files)
+* Modular rule-based validation system
+* Runtime rule selection and configuration
+* Deterministic execution for CI pipelines
+* Structured logging (JAR-LOG or JSON)
+* Clear OK / KO rule reporting
+* Multiple verbosity levels
+
+It is **not a formatter**, but a **strict validation tool**.
+
+---
+
+## 🔹 Key Features
+
+* Recursive directory scanning
+* Modular rule system (categories: O, G, MY, etc.)
+* Independent rule execution
+* Runtime argument overriding (`--set`)
+* Selective rule execution (`--rule`)
+* Structured colored output (OK / KO)
+* Multi-level verbosity and silent modes
+* JSON and JAR-LOG logging formats
+* Deterministic exit codes for automation
+* Built-in update system
+
+---
+
+## 🔹 Architecture Overview
 
 ```
-__program__  = "JCCS (Jarbin-C-Coding-Style)"
-__version__  = "v0.9"
-__author__   = "Jarjarbin06"
-__email__    = "nathan.amaraggi@epitech.eu"
-```
+        ┌──────────────────────────┐
+        │     CLI Interface        │
+        │     (JCCS command)       │
+        └────────────┬─────────────┘
+                     │
+                     ▼
 
-Console helpers are provided by `jarbin_toolkit_console`.
-Logging is handled by `jarbin_toolkit_log` (JAR-LOG or JSON formats).
-Execution timing utilities are provided by `jarbin_toolkit_time`.
+        ┌──────────────────────────┐
+        │  Project Scanner         │
+        │ (recursive traversal)    │
+        └────────────┬─────────────┘
+                     │
+                     ▼
+
+        ┌──────────────────────────┐
+        │   Rule Dispatcher        │
+        │ (category-based system)  │
+        └────────────┬─────────────┘
+                     │
+ ┌───────────────────┼───────────────────┼───────────────┐
+ │                   │                   │               │
+┌────────────────┐  ┌────────────────┐  ┌────────────┐  ┌─────┐
+│ Rule O         │  │ Rule G         │  │ Rule JCCS  │  │ ... │
+│ (Organization) │  │ (Global scope) │  │ (Custom)   │  │ ... │
+└────────────────┘  └────────────────┘  └────────────┘  └─────┘
+
+
+    │
+    ▼
+┌──────────────────────────┐
+│ Output / Logging System  │
+│ (OK / KO + logs)         │
+└──────────────────────────┘
+```
 
 ---
 
-## 📁 Project structure (example)
+## 🔹 Core Concept
+
+JCCS is based on a **modular rule execution system**:
+
+* Rules are grouped by **categories**
+* Each rule is **independent and deterministic**
+* Rules receive:
+
+  * file paths
+  * runtime arguments
+
+---
+
+### Rule contract
+
+```python
+check(paths: list[str], kwargs: dict) -> list[RuleError] | None
+````
+
+* `paths` → files to analyze
+* `kwargs` → runtime configuration
+* returns:
+
+  * `None` or empty → OK
+  * list of errors → KO
+
+---
+
+## 🔹 Project Structure
 
 ```
 ├── epitech_c_coding_style.pdf
@@ -59,158 +166,121 @@ Execution timing utilities are provided by `jarbin_toolkit_time`.
     │   ├── Rules.py
     │   ├── O
     │   ├── G
-    │   └── MY
+    │   └── JCCS
     └── utils
 ```
 
 ---
 
-## 🧠 Rule system
+## 🔹 CLI Usage
 
-Rules are registered in `sources/rules/Rules.py`.
+### Basic command
 
-The global `RULES` structure is organized as:
-
-* Category key → category metadata + rule entries
-* Each rule contains:
-
-  * `"info"` → rule description
-  * `"check"` → validation function
-  * `"arguments"` → configurable runtime parameters
-  * `"level"` → severity (INFO | MINOR | MAJOR | FATAL)
-
-### Rule contract
-
-Each rule must implement:
-
-```
-check(paths: list[str], kwargs: dict) -> list[RuleError] | None
-```
-
-* `paths`: list of files to analyze
-* `kwargs`: runtime parameters (flags + rule arguments)
-* returns `None` or empty list if OK, or a list of `RuleError` if violations exist
-
----
-
-## 🚀 Usage
-
-Run the CLI:
-
-```
+```bash
 JCCS [OPTIONS]
 ```
 
-### Available options
+---
 
-```
+### Core Options
+
+```bash
 -h, --help
-    Display help message and exit.
-
 -v, --version
-    Show program name, version and author and exit.
-
 -a, --show-arguments
-    Display available categories, rules and their configurable arguments, then exit.
-
 --update
-    Update the program and exit.
+```
 
+---
+
+### Execution Control
+
+```bash
 -r, --root <path>
-    Root directory to analyze. Default: current directory (.)
-
--e, --exclude <path1> [path2 ...]
-    Exclude one or several paths from scanning.
-    • Accepts space-separated values.
-    • Can be used multiple times.
-    • Values may also be passed inside quotes.
-
--R, --rule <rule1> [rule2 ...]
-    Run only the specified rule(s).
-    • Accepts multiple rule names.
-    • Replaces the default rule set with a custom selection.
-    • Fails if a rule does not exist.
-
+-e, --exclude <path...>
+-R, --rule <rule...>
 -S, --set <CATEGORY> <RULE> <ARG> <VALUE>
-    Override a rule argument at runtime.
-    • CATEGORY must exist.
-    • RULE must exist in the category.
-    • ARG must be configurable.
-    • VALUE replaces the default argument value.
+```
 
+---
+
+### Output Modes
+
+```bash
 -s, --silent
-    Silent mode (level 1): display rule summaries only.
-
 --super-silent
-    Silent mode (level 2): display only final JCCS result.
-
 --extreme-silent
-    Silent mode (level 3): no output.
+```
 
+---
+
+### Verbosity
+
+```bash
 -V, --verbose
-    Verbose mode (level 1): enable debug output.
-
 --super-verbose
-    Verbose mode (level 2): full execution trace output.
+```
 
+---
+
+### Logging
+
+```bash
 -j, --json-log
-    Switch log format to JSON (default: JAR-LOG).
-
 --no-log
-    Delete log file after execution.
-
 --show-log
-    Print generated log at program exit.
 ```
 
 ---
 
-## 🔍 Execution behavior
+## 🔹 Execution Behavior
 
-* Recursively scans all non-hidden files (`.` prefix ignored)
-* Traverses directories unless excluded via `--exclude`
-* Applies selected rules sequentially by category
-* Each rule runs independently with isolated arguments
-* Results are displayed as:
-
-  * `[OK]` → no violations
-  * `[KO]` → rule violations detected
-
----
-
-## 📤 Exit codes
+* Recursively scans project directory
+* Ignores hidden files and folders
+* Applies rules sequentially
+* Each rule executes independently
+* Output format:
 
 ```
-0   — Success (no style errors found)
-84  — Failure (style errors found or invalid usage)
--1  — Fatal internal rule execution error
+[OK] → no violations
+[KO] → violations detected
 ```
 
 ---
 
-## 🛠 Installation
-
-Install system-wide:
+## 🔹 Exit Codes
 
 ```
+0   → Success (no errors)
+84  → Style errors or invalid usage
+-1  → Internal rule failure
+```
+
+---
+
+## 🔹 Installation
+
+### Install
+
+```bash
 make install
 ```
 
-Uninstall:
+### Uninstall
 
-```
+```bash
 make uninstall
 ```
 
-Reinstall:
+### Reinstall
 
-```
+```bash
 make reinstall
 ```
 
-Update:
+### Update
 
-```
+```bash
 JCCS --update
 ```
 
@@ -219,61 +289,114 @@ JCCS --update
 
 ---
 
-## 🧩 Extending JCCS — add a rule
+## 🔹 Rule System
 
-1. Create a new rule file in the correct category folder:
+Rules are defined in:
 
-   ```
-   sources/rules/<CATEGORY>/<RULE>.py
-   ```
+```
+sources/rules/Rules.py
+```
+
+Each rule contains:
+
+* `info` → description
+* `check` → validation function
+* `arguments` → configurable parameters
+* `level` → severity
+
+---
+
+## 🔹 Extending JCCS
+
+### Add a new rule
+
+1. Create:
+
+```
+sources/rules/<CATEGORY>/<RULE>.py
+```
 
 2. Implement:
 
-   * `name`
-   * `info`
-   * `check(paths, kwargs)`
-   * optional configurable arguments
+* rule name
+* `check()` function
+* optional arguments
 
-3. Register the rule in:
+3. Register in:
 
-   ```
-   sources/rules/Rules.py
-   ```
-
-   using:
-
-   * `"info"`
-   * `"check"`
-   * `"arguments"`
-   * `"level"`
-
-Rules must remain deterministic, independent, and side-effect free.
+```
+sources/rules/Rules.py
+```
 
 ---
 
-## 🎯 Design goals
+### Constraints
+
+* Rules must be deterministic
+* No side effects allowed
+* Independent execution only
+
+---
+
+## 🔹 Memory & Execution Model
+
+* No persistent state between rules
+* File list shared across rules
+* Arguments passed per rule execution
+* Logging system isolated from rule logic
+
+---
+
+## 🔹 Design Philosophy
 
 * Deterministic execution (CI-safe)
-* Fully modular rule architecture
-* Runtime configurable behavior
-* Clear CLI output (OK / KO / errors)
-* Flexible logging system (human + machine readable)
-* Easy extensibility without core modifications
+* Modular and extensible architecture
+* Strict validation (no auto-fix)
+* Clear and structured output
+* Runtime configurability
+* Separation of concerns (rules vs engine)
 
 ---
 
-## 📜 License
+## 🔹 Current State
 
-See the `LICENSE` file included in the repository.
+⚠️ Stable and actively evolving
+
+Status:
+
+* Recursive scanning implemented
+* Rule system fully modular
+* CLI fully functional
+* Logging system operational
+* Runtime configuration supported
+
+Limitations:
+
+* No automatic formatting
+* Depends on rule completeness
+* Performance scales with project size (still fast for 20000+ files)
+* No parallel execution (yet)
 
 ---
 
-## 📎 Notes
+## 🔹 File Structure
 
-* Reference coding-style PDF: `epitech_c_coding_style.pdf`
-* Primary target: Epitech C projects
-* Rules are extensible for custom project constraints
-* Focus on clarity, reproducibility, and strict validation
+```
+sources/    → Core implementation
+rules/      → Rule definitions
+utils/      → Helpers and tooling
+scripts/    → Install / update tools
+```
+
+---
+
+## 🔹 Notes
+
+* Based on EPITECH coding-style philosophy
+* Designed for strict validation workflows
+* Easily extensible for custom rules
+* Suitable for CI/CD pipelines
+* Focus on reproducibility and clarity
 
 ---
 

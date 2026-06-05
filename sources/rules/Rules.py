@@ -83,7 +83,7 @@ except BaseException as e:
 # CUSTOM RULES
 # =========================
 try:
-    from rules.MY import JCCS1, JCCS2
+    from rules.JCCS import JCCS1, JCCS2
 
     register_category(
         "JCCS",
