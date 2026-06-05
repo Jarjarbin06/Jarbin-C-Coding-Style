@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # COLORS #
 BLUE="\033[0;34m"
 GREEN="\033[0;32m"
@@ -11,21 +13,26 @@ NC="\033[0m"
 JCCS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
 
 # FUNCTION #
+install_jccs_update_checker() {
+    if [ ! -d "$USER_HOME/.local/updates" ]; then mkdir "$USER_HOME/.local/updates"; fi
+    sudo cp -rf "$JCCS_DIR/ressources/check-update-jccs" "$USER_HOME/.local/updates/JCCS.sh"
+    sudo cp -rf "$JCCS_DIR/VERSION" "$USER_HOME/.local/updates/JCCS_VERSION"
+}
+
 install_jccs_bash() {
     local bash="$USER_HOME/.bashrc"
 
     if [[ -f "$bash" ]]; then
         if grep -q "\[JCCS\]" "$bash"; then
-            echo -e "$YELLOW JCCS already installed in $bash$NC"
+            echo -e "\t$YELLOW JCCS already installed in $bash$NC"
         else
             echo "export PATH=\"$JCCS_DIR/bin:\$PATH\" #[JCCS] - flag used when uninstalling" >> "$bash"
-            echo "[ -f \"$JCCS_DIR/ressources/check_update-jccs\" ] && source \"$JCCS_DIR/ressources/check_update-jccs\" #[JCCS] - flag used when uninstalling" >> "$bash"
-            echo "rm ~/.cache/jccs_last_check #[JCCS] - flag used when uninstalling" >> "$bash"
+            echo "[ -f \"/home/jarjarbin/.local/updates/JCCS.sh\" ] && source \"/home/jarjarbin/.local/updates/JCCS.sh\" #[JCCS] - flag used when uninstalling" >> "$bash"
             cp -f "$JCCS_DIR/ressources/bash-auto-completion" "/etc/bash_completion.d/jccs"
-            echo -e "$GREEN JCCS installed in $bash$NC"
+            echo -e "\t$GREEN JCCS installed in $bash$NC"
         fi
     else
-        echo "$RED $bash not found$NC"
+        echo "\t$RED $bash not found$NC"
     fi
 }
 
@@ -34,51 +41,52 @@ install_jccs_zsh() {
 
     if [[ -f "$zsh" ]]; then
         if grep -q "\[JCCS\]" "$zsh"; then
-            echo -e "$YELLOW JCCS already installed in $zsh$NC"
+            echo -e "\t$YELLOW JCCS already installed in $zsh$NC"
         else
             echo "typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet #[JCCS] - flag used when uninstalling" >> $zsh
             echo "export PATH=\"$JCCS_DIR/bin:\$PATH\" #[JCCS] - flag used when uninstalling" >> "$zsh"
-            echo "[ -f \"$JCCS_DIR/ressources/check_update-jccs\" ] && source \"$JCCS_DIR/ressources/check_update-jccs\" #[JCCS] - flag used when uninstalling" >> "$zsh"
-            echo "rm ~/.cache/jccs_last_check #[JCCS] - flag used when uninstalling" >> "$zsh"
+            echo "[ -f \"/home/jarjarbin/.local/updates/JCCS.sh\" ] && source \"/home/jarjarbin/.local/updates/JCCS.sh\" #[JCCS] - flag used when uninstalling" >> "$zsh"
             echo "fpath=($USER_HOME/.zsh/completions \$fpath) #[JCCS] - flag used when uninstalling" >> "$zsh"
             echo "autoload -Uz compinit #[JCCS] - flag used when uninstalling" >> "$zsh"
             echo "compinit #[JCCS] - flag used when uninstalling" >> "$zsh"
             echo "autoload -Uz _JCCS #[JCCS] - flag used when uninstalling" >> "$zsh"
             echo "compdef _JCCS JCCS #[JCCS] - flag used when uninstalling" >> "$zsh"
             if [[ -d "$USER_HOME/.zsh/" ]]; then
-                echo -e "$GREEN $USER_HOME/.zsh/ found$NC"
+                echo -e "\t$GREEN $USER_HOME/.zsh/ found$NC"
             else
-                echo -e "$YELLOW $USER_HOME/.zsh/ not found$NC"
+                echo -e "\t$YELLOW $USER_HOME/.zsh/ not found$NC"
                 mkdir "$USER_HOME/.zsh/"
                 chmod 755 "$USER_HOME/.zsh/"
             fi
             if [[ -d "$USER_HOME/.zsh/completions" ]]; then
-                echo -e "$GREEN $USER_HOME/.zsh/completions found$NC"
+                echo -e "\t$GREEN $USER_HOME/.zsh/completions found$NC"
             else
-                echo -e "$YELLOW $USER_HOME/.zsh/completions not found$NC"
+                echo -e "\t$YELLOW $USER_HOME/.zsh/completions not found$NC"
                 mkdir "$USER_HOME/.zsh/completions"
                 chmod 755 "$USER_HOME/.zsh/completions"
             fi
             cp -f "$JCCS_DIR/ressources/zsh-auto-completion" "$USER_HOME/.zsh/completions/_JCCS"
             chmod +x "$USER_HOME/.zsh/completions/_JCCS"
-            echo -e "$GREEN JCCS installed in $zsh$NC"
+            echo -e "\t$GREEN JCCS installed in $zsh$NC"
         fi
     else
-        echo "$RED $zsh not found$NC"
+        echo "\t$RED $zsh not found$NC"
     fi
 }
 
 # IS SUDO #
 if [ "$EUID" -ne 0 ]; then
-    echo -e "$RED you need to run this command with sudo$NS"
+    echo -e "\t$RED you need to run this command with sudo$NS"
+    false
 else
     # SET USER_HOME #
     USER_HOME=$(eval echo "~$SUDO_USER")
 
     # INSTALL #
+    install_jccs_update_checker
     install_jccs_bash
     install_jccs_zsh
 
     # END MESSAGE #
-    echo -e "\n\t$BLUE[NOTE] install-jccs: you can now open a new shell for the changes to take effect and use \"JCCS\" wherever you need\n$NC"
+    echo -e "\n\t$BLUE[NOTE] install-jccs: you can now open a new shell for the changes to take effect and use \"JCCS\" wherever you need$NC"
 fi

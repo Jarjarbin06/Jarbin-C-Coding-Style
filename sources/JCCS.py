@@ -7,7 +7,7 @@
 #############################
 
 from os.path import abspath
-from sys import argv, exit
+from sys import argv as sargv, exit, stderr
 
 import jarbin_toolkit_console as Console
 from jarbin_toolkit_log import Log
@@ -24,7 +24,7 @@ Text = Console.Text.Text
 Console.init(banner=False)
 
 EXIT_SUCCESS = 0
-EXIT_FAILURE = 84
+EXIT_FAILURE = 1
 EXIT_FATAL = 84
 
 
@@ -44,8 +44,9 @@ __email__ = "nathan.amaraggi@epitech.eu"
 # =========================
 # MAIN
 # =========================
-if __name__ == "__main__":
-
+def main(
+        argv,
+    ) -> None:
     exit_status: int = EXIT_SUCCESS
     error_amount: int = 0
 
@@ -64,7 +65,7 @@ if __name__ == "__main__":
         from rules import Rules
 
     except BaseException:
-        print(Text("Failed to import rules").critic())
+        print(Text("Failed to import rules").critic(), file=stderr)
         log.log("CRIT", "Rules", "import failed")
         exit(EXIT_FATAL)
 
@@ -172,7 +173,7 @@ if __name__ == "__main__":
             log.log("VALID", "Program", "success")
 
         else:
-            print(Text("JCCS").critic(), "terminated (fatal)")
+            print(Text("JCCS").critic(), "terminated (fatal)", file=stderr)
             log.log("CRIT", "Program", "fatal error")
             exit_status = EXIT_FATAL
 
@@ -192,5 +193,7 @@ if __name__ == "__main__":
 
     exit(exit_status)
 
+if __name__ == "__main__":
+    main(sargv)
 
 Console.quit(delete_log=True)

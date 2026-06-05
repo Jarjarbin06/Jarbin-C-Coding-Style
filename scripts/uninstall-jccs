@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # COLORS #
 BLUE="\033[0;34m"
 GREEN="\033[0;32m"
@@ -8,6 +10,11 @@ RED="\033[0;31m"
 NC="\033[0m"
 
 # FUNCTION #
+uninstall_jccs_update_checker() {
+    rm -f "$USER_HOME/.local/updates/JCCS.sh"
+    cp -f "$USER_HOME/.local/updates/JCCS_VERSION"
+}
+
 uninstall_jccs_bash() {
     local bash="$USER_HOME/.bashrc"
 
@@ -15,12 +22,12 @@ uninstall_jccs_bash() {
         if grep -q "\[JCCS\]" "$bash"; then
             sed -i '/\[JCCS\]/d' "$bash"
             rm -f "/etc/bash_completion.d/jccs"
-            echo -e "$GREEN JCCS uninstalled in $bash$NC"
+            echo -e "\t$GREEN JCCS uninstalled in $bash$NC"
         else
-            echo -e "$YELLOW JCCS not installed in $bash$NC"
+            echo -e "\t$YELLOW JCCS not installed in $bash$NC"
         fi
     else
-        echo "$RED $bash not found$NC"
+        echo "\t$RED $bash not found$NC"
     fi
 }
 
@@ -31,18 +38,19 @@ uninstall_jccs_zsh() {
         if grep -q "\[JCCS\]" "$zsh"; then
             sed -i '/\[JCCS\]/d' "$zsh"
             rm -f "$USER_HOME/.zsh/completions/_JCCS"
-            echo -e "$GREEN JCCS uninstalled in $zsh$NC"
+            echo -e "\t$GREEN JCCS uninstalled in $zsh$NC"
         else
-            echo -e "$YELLOW JCCS not installed in $zsh$NC"
+            echo -e "\t$YELLOW JCCS not installed in $zsh$NC"
         fi
     else
-        echo "$RED $zsh not found$NC"
+        echo "\t$RED $zsh not found$NC"
     fi
 }
 
 # IS SUDO #
 if [ "$EUID" -ne 0 ]; then
-    echo -e "$RED you need to run this command with sudo$NS"
+    echo -e "\t$RED you need to run this command with sudo$NS"
+    false
 else
     # SET USER_HOME #
     USER_HOME=$(eval echo "~$SUDO_USER")
@@ -52,5 +60,5 @@ else
     uninstall_jccs_zsh
 
     # END MESSAGE #
-    echo -e "\n\t$BLUE[NOTE] uninstall-jccs: you can now open a new shell for the changes to take effect\n$NC"
+    echo -e "\n\t$BLUE[NOTE] uninstall-jccs: you can now open a new shell for the changes to take effect$NC"
 fi

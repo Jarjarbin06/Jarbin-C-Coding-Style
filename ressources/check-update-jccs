@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+RESET=$'\033[0m'
+BOLD=$'\033[1m'
+DIM=$'\033[2m'
+WHITE=$'\033[37m'
+GREEN=$'\033[32m'
+YELLOW=$'\033[33m'
+
+# Resolve script directory safely
+if [ -n "$BASH_SOURCE" ]; then
+    SCRIPT_PATH="${BASH_SOURCE[0]}"
+elif [ -n "$ZSH_VERSION" ]; then
+    SCRIPT_PATH="${(%):-%x}"
+else
+    SCRIPT_PATH="$0"
+fi
+
+# FIXED: correct directory (NO "..")
+UPDATES_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+
+LOCAL_VERSION_FILE="$UPDATES_DIR/JCCS_VERSION"
+REMOTE_VERSION_URL="https://raw.githubusercontent.com/Jarjarbin06/Jarbin-C-Coding-Style/refs/heads/main/VERSION"
+
+# Versions
+local_ver="unknown"
+if [ -f "$LOCAL_VERSION_FILE" ]; then
+    local_ver="$(tr -d '[:space:]' < "$LOCAL_VERSION_FILE" 2>/dev/null || true)"
+    [[ -z "$local_ver" ]] && local_ver="unknown"
+fi
+
+remote_ver="$(curl -fsL "$REMOTE_VERSION_URL" 2>/dev/null | tr -d '[:space:]')"
+
+if [ -n "$remote_ver" ] && [ "$remote_ver" != "$local_ver" ]; then
+    echo "STATUS=update"
+    echo "NAME=JCCS"
+    echo "FROM=$local_ver"
+    echo "TO=$remote_ver"
+    echo "ACTION=JCCS --update"
+fi

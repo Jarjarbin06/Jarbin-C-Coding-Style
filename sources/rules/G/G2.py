@@ -38,18 +38,15 @@ def get_line_error(file: str) -> str:
 
         if line.strip() == "}":
 
-            # safe bounds
             if index + 2 >= len(lines):
                 continue
 
             next_line = lines[index + 1]
             next_next_line = lines[index + 2]
 
-            # ignore preprocessor
             if next_line.strip().startswith("#"):
                 continue
 
-            # must be exactly one empty line
             if not (next_line == "\n" and next_next_line != "\n"):
 
                 return Format.error(

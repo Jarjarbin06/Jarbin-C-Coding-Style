@@ -1,3 +1,9 @@
 #!/bin/bash
 
+set -e
+
+# JCCS PATH #
+JCCS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+
 git -C "$(dirname "$0")" pull --quiet
+sudo cp -f "$JCCS_DIR/VERSION" "$HOME/.local/updates/JCCS_VERSION"

@@ -14,11 +14,8 @@ from jarbin_toolkit_log import Log
 
 import program.helper as Helper
 from program.update import update_jccs
-from program.rule.category import Category
 from program.rule.rule_manager import RuleManager
-
-EXIT_SUCCESS = 0
-EXIT_FAILURE = 84
+from JCCS import EXIT_SUCCESS, EXIT_FAILURE
 
 class Flag:
 
@@ -172,10 +169,10 @@ def parse_args(
         except Exception as e:
             error(str(e), ctx)
 
-        if arg not in rule.variables:
+        if f"VAR_{arg}" not in rule.variables:
             error(f"{rule_name} has no argument {arg}", ctx)
 
-        rule.variables[arg] = val
+        rule.variables[f"VAR_{arg}"] = val
         ctx.log.log("VALID", "Flag", f"-S set {cat}/{rule_name}/{arg}")
 
     # =========================
@@ -204,6 +201,7 @@ def parse_args(
         Flag(["-v", "--version"], handler="version"),
         Flag(["-a", "--show-arguments"], handler="arguments"),
         Flag(["--update"], handler="update"),
+        Flag(["--test"], handler="test"),
     ]
 
     # =========================
@@ -244,6 +242,12 @@ def parse_args(
         if flag.handler == "update":
             ctx.log.log("VALID", "Flag", "--update called")
             update_jccs()
+            log_exit(ctx)
+
+        if flag.handler == "test":
+            ctx.log.log("VALID", "Flag", "--test called")
+            from tests.JT_main import JTT
+            JTT.run()
             log_exit(ctx)
 
         # value parsing

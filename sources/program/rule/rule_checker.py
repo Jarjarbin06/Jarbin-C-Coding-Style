@@ -137,7 +137,6 @@ def check(
                                     str(Color(Color.C_RESET) + "\n" + get_color("┃ ", rule.level))
                                 ),
                                 end=get_color("┃\n", rule.level) + Color(Color.C_RESET),
-                                file=stderr
                             )
 
                 else:
@@ -174,7 +173,8 @@ def check(
                         Text(category.name).bold(),
                         "━" * 5,
                         Text("[••TERM••]").critic(),
-                        "━┛\n"
+                        "━┛\n",
+                        file=stderr
                     )
                 return -1
 

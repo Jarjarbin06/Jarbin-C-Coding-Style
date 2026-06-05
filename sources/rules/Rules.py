@@ -72,7 +72,7 @@ try:
         "Global Scope",
         """Enforces coding style rules for global scope usage, formatting,
 headers, includes, and structural constraints.""",
-        [G1, G2, G3, G4, G5, G6, G7, G8, G9, G10]
+        [G1, G3, G4, G5, G6, G7, G8, G9, G10]
     )
 
 except BaseException as e:

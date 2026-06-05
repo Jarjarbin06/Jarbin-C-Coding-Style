@@ -28,6 +28,8 @@ print = Console.Console.print
 Text = Console.Text.Text
 
 # Custom Variables #
+VAR_IGNORED_FILES = "Makefile JCCS README CMakeLists"
+VAR_IGNORED_FILES_doc = "List of ignored file names."
 VAR_GENERIC_NAMES = "algo file tmp temp misc stuff code"
 VAR_GENERIC_NAMES_doc = "List of generic names to check."
 
@@ -45,8 +47,12 @@ def check(paths, **kwargs) -> list[RuleError] | None:
     verbose = kwargs.get("verbose", 0)
     root = kwargs.get("root", 0)
 
-    global VAR_GENERIC_NAMES
+    global VAR_IGNORED_FILES, VAR_GENERIC_NAMES
+    VAR_IGNORED_FILES = kwargs.get("VAR_IGNORED_FILES", VAR_IGNORED_FILES)
     VAR_GENERIC_NAMES = kwargs.get("VAR_GENERIC_NAMES", VAR_GENERIC_NAMES)
+
+    if isinstance(VAR_IGNORED_FILES, tuple):
+        VAR_IGNORED_FILES = VAR_IGNORED_FILES[0]
 
     if isinstance(VAR_GENERIC_NAMES, tuple):
         VAR_GENERIC_NAMES = VAR_GENERIC_NAMES[0]
@@ -73,7 +79,7 @@ def check(paths, **kwargs) -> list[RuleError] | None:
         folders = parts[:-1]
 
         for folder in folders:
-            if folder and not RE_SNAKE_CASE_PATTERN.fullmatch(folder):
+            if folder and not RE_SNAKE_CASE_PATTERN.fullmatch(folder.replace("/", "")):
                 if verbose:
                     print(
                         Text(" ").debug(title=True),
@@ -84,7 +90,10 @@ def check(paths, **kwargs) -> list[RuleError] | None:
 
         name_no_ext = file_name.split(".")[0]
 
-        if not RE_SNAKE_CASE_PATTERN.fullmatch(name_no_ext):
+        if name_no_ext in VAR_IGNORED_FILES:
+            return True
+
+        if not RE_SNAKE_CASE_PATTERN.fullmatch(name_no_ext.replace("/", "")):
             if verbose:
                 print(
                     Text(" ").debug(title=True),
