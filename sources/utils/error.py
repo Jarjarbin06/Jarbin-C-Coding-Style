@@ -41,7 +41,7 @@ class RuleError(Error):
 
     def __str__(
             self,
-    ) -> str:
+        ) -> str:
         """
             Get string representation of the error.
 
