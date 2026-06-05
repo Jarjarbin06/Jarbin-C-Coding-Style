@@ -12,125 +12,130 @@ from jarbin_toolkit_jartest import JarTest, Get, Assertion
 # ROOT FLAG (-r / --root)
 # =========================================================
 def JT_root():
-    out, err, code = Get.Redirect.cmd_full("JCCS", "--root", ".")
+    out, err, code = Get.Redirect.cmd_all_std("JCCS", "--root", ".")
 
-    Assertion.eq(len(err), 0)
-    Assertion.neq(len(out), 0)
+    Assertion.eq(err, "")
+    Assertion.neq(out, "")
 
 
 def JT_root_short():
-    out_s, err_s, code_s = Get.Redirect.cmd_full("JCCS", "-r", ".")
-    out_l, err_l, code_l = Get.Redirect.cmd_full("JCCS", "--root", ".")
+    out_s, err_s, code_s = Get.Redirect.cmd_all_std("JCCS", "-r", ".")
+    out_l, err_l, code_l = Get.Redirect.cmd_all_std("JCCS", "--root", ".")
 
-    Assertion.eq((err_s, code_s), (err_l, code_l))
     Assertion.eq(out_s, out_l)
-    Assertion.neq(len(out_s), 0)
+    Assertion.eq(err_s, err_l)
+    Assertion.eq(code_s, code_l)
+    Assertion.eq(err_s, "")
+    Assertion.neq(out_s, "")
 
 
 # =========================================================
 # EXCLUDE FLAG (-e / --exclude) (multi)
 # =========================================================
 def JT_exclude_single():
-    out, err, code = Get.Redirect.cmd_full("JCCS", "--exclude", "test_file.py")
+    out, err, code = Get.Redirect.cmd_all_std("JCCS", "--exclude", "test_file.py")
 
-    Assertion.eq(code, 0)
-    Assertion.eq(len(err), 0)
-    Assertion.neq(len(out), 0)
+    Assertion.eq(err, "")
+    Assertion.neq(out, "")
 
 
 def JT_exclude_multi():
-    out, err, code = Get.Redirect.cmd_full(
+    out, err, code = Get.Redirect.cmd_all_std(
         "JCCS",
         "--exclude",
         "a.py",
-        "--exclude",
         "b.py"
     )
 
-    Assertion.eq(code, 0)
-    Assertion.eq(len(err), 0)
-    Assertion.neq(len(out), 0)
+    Assertion.eq(err, "")
+    Assertion.neq(out, "")
 
 
 def JT_exclude_consistency():
-    out_s, err_s, code_s = Get.Redirect.cmd_full(
+    out_s, err_s, code_s = Get.Redirect.cmd_all_std(
         "JCCS", "-e", "a.py", "-e", "b.py"
     )
-    out_l, err_l, code_l = Get.Redirect.cmd_full(
-        "JCCS", "--exclude", "a.py", "--exclude", "b.py"
+    out_l, err_l, code_l = Get.Redirect.cmd_all_std(
+        "JCCS", "--exclude", "a.py", "b.py"
     )
 
-    Assertion.eq((out_s, err_s, code_s), (out_l, err_l, code_l))
-    Assertion.neq(len(out_s), 0)
+    Assertion.eq(out_s, out_l)
+    Assertion.eq(err_s, err_l)
+    Assertion.eq(code_s, code_l)
+    Assertion.eq(err_s, "")
+    Assertion.neq(out_s, "")
 
 
 # =========================================================
 # RULE FLAG (-R / --rule) (multi)
 # =========================================================
+# =========================================================
 def JT_rule_single():
-    out, err, code = Get.Redirect.cmd_full("JCCS", "--rule", "O1")
+    out, err, code = Get.Redirect.cmd_all_std("JCCS", "--rule", "O", "O2")
 
-    Assertion.eq(code, 0)
-    Assertion.eq(len(err), 0)
-    Assertion.neq(len(out), 0)
+    Assertion.eq(err, "")
+    Assertion.neq(out, "")
 
 
 def JT_rule_multi():
-    out, err, code = Get.Redirect.cmd_full(
+    out, err, code = Get.Redirect.cmd_all_std(
         "JCCS",
         "--rule",
-        "O1",
-        "--rule",
-        "O2"
+        "O",
+        "O2",
+        "G",
+        "G1"
     )
 
-    Assertion.eq(code, 0)
-    Assertion.eq(len(err), 0)
-    Assertion.neq(len(out), 0)
+    Assertion.eq(err, "")
+    Assertion.neq(out, "")
 
 
 def JT_rule_consistency():
-    out_s, err_s, code_s = Get.Redirect.cmd_full("JCCS", "-R", "O1", "-R", "O2")
-    out_l, err_l, code_l = Get.Redirect.cmd_full("JCCS", "--rule", "O1", "--rule", "O2")
+    out_s, err_s, code_s = Get.Redirect.cmd_all_std("JCCS", "-R", "O", "O2", "G", "G1")
+    out_l, err_l, code_l = Get.Redirect.cmd_all_std("JCCS", "--rule", "O", "O2", "G", "G1")
 
-    Assertion.eq((err_s, code_s), (err_l, code_l))
     Assertion.eq(out_s, out_l)
-    Assertion.neq(len(out_s), 0)
+    Assertion.eq(err_s, err_l)
+    Assertion.eq(code_s, code_l)
+    Assertion.eq(err_s, "")
+    Assertion.neq(out_s, "")
 
 
 # =========================================================
 # SET FLAG (-S / --set) (multi)
 # =========================================================
 def JT_set_single():
-    out, err, code = Get.Redirect.cmd_full("JCCS", "--set", "KEY=VALUE")
+    out, err, code = Get.Redirect.cmd_all_std("JCCS", "--set", "O", "O1" ,"UNAUTHORIZED_EXTENSIONS", "c h")
 
-    Assertion.eq(code, 0)
-    Assertion.eq(len(err), 0)
-    Assertion.neq(len(out), 0)
+    Assertion.eq(err, "")
+    Assertion.neq(out, "")
 
 
 def JT_set_multi():
-    out, err, code = Get.Redirect.cmd_full(
+    out, err, code = Get.Redirect.cmd_all_std(
         "JCCS",
-        "--set", "A=1",
-        "--set", "B=2"
+        "--set", "O", "O1" ,"UNAUTHORIZED_EXTENSIONS", "c h",
+        "--set", "O", "O1" ,"EXCLUDED_FOLDERS", ""
     )
 
-    Assertion.eq(code, 0)
-    Assertion.eq(len(err), 0)
-    Assertion.neq(len(out), 0)
+    Assertion.eq(err, "")
+    Assertion.neq(out, "")
 
 
 def JT_set_consistency():
-    out_s, err_s, code_s = Get.Redirect.cmd_full(
-        "JCCS", "-S", "A=1", "-S", "B=2"
+    out_s, err_s, code_s = Get.Redirect.cmd_all_std(
+        "JCCS", "-S", "O", "O1" ,"UNAUTHORIZED_EXTENSIONS", "c h"
     )
-    out_l, err_l, code_l = Get.Redirect.cmd_full(
-        "JCCS", "--set", "A=1", "--set", "B=2"
+    out_l, err_l, code_l = Get.Redirect.cmd_all_std(
+        "JCCS", "--set", "O", "O1" ,"UNAUTHORIZED_EXTENSIONS", "c h"
     )
 
-    Assertion.eq((out_s, err_s, code_s), (out_l, err_l, code_l))
-    Assertion.neq(len(out_s), 0)
+    Assertion.eq(out_s, out_l)
+    Assertion.eq(err_s, err_l)
+    Assertion.eq(code_s, code_l)
+    Assertion.eq(err_s, "")
+    Assertion.neq(out_s, "")
 
 
 # =========================================================

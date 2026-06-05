@@ -13,12 +13,14 @@ import JCCS
 # VERSION FLAG (-v / --version)
 # =========================================================
 def JT_version():
-    out_s, err_s, code_s = Get.Redirect.cmd_full("JCCS", "-v")
-    out_l, err_l, code_l = Get.Redirect.cmd_full("JCCS", "--version")
+    out_s, err_s, code_s = Get.Redirect.cmd_all_std("JCCS", "-v")
+    out_l, err_l, code_l = Get.Redirect.cmd_all_std("JCCS", "--version")
 
-    Assertion.eq((out_s, err_s, code_s), (out_l, err_l, code_l))
-    Assertion.eq(code_s, 0)
-    Assertion.eq(len(err_s), 0)
+    Assertion.eq(out_s, out_l)
+    Assertion.eq(err_s, err_l)
+    Assertion.eq(code_s, code_l)
+    Assertion.eq(err_s, "")
+    Assertion.neq(out_s, "")
     Assertion.contain(JCCS.__version__, out_s)
 
 
@@ -26,11 +28,13 @@ def JT_version():
 # HELP FLAG (--help)
 # =========================================================
 def JT_help():
-    out, err, code = Get.Redirect.cmd_full("JCCS", "--help")
+    out, err, code = Get.Redirect.cmd_all_std("JCCS", "--help")
 
-    Assertion.eq(code, 0, "help: exit code must be 0")
-    Assertion.eq(len(err), 0, "help: stderr must be empty")
-    assert "usage" in out.lower() or "jccs" in out.lower()
+    Assertion.eq(code, 0)
+    Assertion.eq(err, "")
+    Assertion.neq(out, "")
+    Assertion.contain("usage", out.lower())
+    Assertion.contain("jccs", out.lower())
     Assertion.contain("help", out.lower())
 
 
@@ -38,33 +42,37 @@ def JT_help():
 # SHORT HELP (-h)
 # =========================================================
 def JT_short_help():
-    out, err, code = Get.Redirect.cmd_full("JCCS", "-h")
+    out, err, code = Get.Redirect.cmd_all_std("JCCS", "-h")
 
     Assertion.eq(code, 0)
-    Assertion.eq(len(err), 0)
-    Assertion.neq(len(out), 0)
+    Assertion.eq(err, "")
+    Assertion.neq(out, "")
 
 
 # =========================================================
 # ARGUMENTS DISPLAY (-a / --show-arguments)
 # =========================================================
 def JT_arguments():
-    out_s, err_s, code_s = Get.Redirect.cmd_full("JCCS", "-a")
-    out_l, err_l, code_l = Get.Redirect.cmd_full("JCCS", "--show-arguments")
+    out_s, err_s, code_s = Get.Redirect.cmd_all_std("JCCS", "-a")
+    out_l, err_l, code_l = Get.Redirect.cmd_all_std("JCCS", "--show-arguments")
 
-    Assertion.eq((out_s, err_s, code_s), (out_l, err_l, code_l))
-    Assertion.eq(code_s, 0)
-    Assertion.eq(len(err_s), 0)
-    assert "rule" in out_s.lower() or "category" in out_s.lower()
+    Assertion.eq(out_s, out_l)
+    Assertion.eq(err_s, err_l)
+    Assertion.eq(code_s, code_l)
+    Assertion.eq(err_s, "")
+    Assertion.neq(out_s, "")
+    Assertion.contain("JCCS - RULES", out_s)
 
 
 # =========================================================
 # UPDATE FLAG (--update)
 # =========================================================
 def JT_update():
-    out, err, code = Get.Redirect.cmd_full("JCCS", "--update")
+    out, err, code = Get.Redirect.cmd_all_std("JCCS", "--update")
 
     Assertion.eq(code, 0)
+    Assertion.eq(err, "")
+    Assertion.neq(out, "")
     Assertion.ncontain("error", out.lower())
 
 
@@ -78,10 +86,14 @@ def JT_builtin_consistency():
     ]
 
     for short, long in flags:
-        out_s, err_s, code_s = Get.Redirect.cmd_full("JCCS", short)
-        out_l, err_l, code_l = Get.Redirect.cmd_full("JCCS", long)
+        out_s, err_s, code_s = Get.Redirect.cmd_all_std("JCCS", short)
+        out_l, err_l, code_l = Get.Redirect.cmd_all_std("JCCS", long)
 
-        Assertion.eq((out_s, err_s, code_s), (out_l, err_l, code_l))
+        Assertion.eq(out_s, out_l)
+        Assertion.eq(err_s, err_l)
+        Assertion.eq(code_s, code_l)
+        Assertion.eq(err_s, "")
+        Assertion.neq(out_s, "")
 
 
 # =========================================================
