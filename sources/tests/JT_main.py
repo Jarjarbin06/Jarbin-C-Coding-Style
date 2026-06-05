@@ -20,5 +20,6 @@ from tests.JT_Flags import JT_Combinations
 # =========================================================
 # REGISTER TEST SUITE
 # =========================================================
+
 JTT: JarTest = JarTest()
 JTT.fetch_tests()

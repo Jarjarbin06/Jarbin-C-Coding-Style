@@ -7,12 +7,13 @@
 #############################
 
 from jarbin_toolkit_jartest import JarTest, Get, Assertion
-import JCCS
 
 # =========================================================
 # VERSION FLAG (-v / --version)
 # =========================================================
 def JT_version():
+    from JCCS import __version__ as version
+
     out_s, err_s, code_s = Get.Redirect.cmd_all_std("JCCS", "-v")
     out_l, err_l, code_l = Get.Redirect.cmd_all_std("JCCS", "--version")
 
@@ -21,7 +22,7 @@ def JT_version():
     Assertion.eq(code_s, code_l)
     Assertion.eq(err_s, "")
     Assertion.neq(out_s, "")
-    Assertion.contain(JCCS.__version__, out_s)
+    Assertion.contain(version, out_s)
 
 
 # =========================================================
@@ -100,4 +101,4 @@ def JT_builtin_consistency():
 # REGISTER TEST SUITE
 # =========================================================
 JTT_Builtins = JarTest()
-JTT_Builtins.fetch()
+failed: list = JTT_Builtins.fetch()

@@ -247,7 +247,7 @@ def parse_args(
         if flag.handler == "test":
             ctx.log.log("VALID", "Flag", "--test called")
             from tests.JT_main import JTT
-            JTT.run()
+            JTT.run(n = 2)
             log_exit(ctx)
 
         # value parsing

@@ -5,7 +5,6 @@
 ###=======================###
 ### by JARJARBIN's STUDIO ###
 #############################
-import os
 
 from jarbin_toolkit_jartest import JarTest, Get, Assertion
 
@@ -161,4 +160,4 @@ def JT_flag_matrix_basic():
 # REGISTER TEST SUITE
 # =========================================================
 JTT_Combinations = JarTest()
-JTT_Combinations.fetch()
+failed: list = JTT_Combinations.fetch()

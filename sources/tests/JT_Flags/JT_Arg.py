@@ -142,4 +142,4 @@ def JT_set_consistency():
 # REGISTER TEST SUITE
 # =========================================================
 JTT_Args = JarTest()
-JTT_Args.fetch()
+failed: list = JTT_Args.fetch()

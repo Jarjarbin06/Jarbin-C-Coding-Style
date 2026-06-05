@@ -77,4 +77,4 @@ def JT_extreme_silent():
 # REGISTER TEST SUITE
 # =========================================================
 JTT_Logs = JarTest()
-JTT_Logs.fetch()
+failed: list = JTT_Logs.fetch()
