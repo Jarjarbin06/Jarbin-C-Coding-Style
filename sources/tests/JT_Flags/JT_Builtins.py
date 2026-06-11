@@ -14,8 +14,8 @@ from jarbin_toolkit_jartest import JarTest, Get, Assertion
 def JT_version():
     from JCCS import __version__ as version
 
-    out_s, err_s, code_s = Get.Redirect.cmd_all_std("JCCS", "-v")
-    out_l, err_l, code_l = Get.Redirect.cmd_all_std("JCCS", "--version")
+    out_s, err_s, code_s = Get.Redirect.cmd_all_std(" ./bin/JCCS", "-v")
+    out_l, err_l, code_l = Get.Redirect.cmd_all_std(" ./bin/JCCS", "--version")
 
     Assertion.eq(out_s, out_l)
     Assertion.eq(err_s, err_l)
@@ -29,7 +29,7 @@ def JT_version():
 # HELP FLAG (--help)
 # =========================================================
 def JT_help():
-    out, err, code = Get.Redirect.cmd_all_std("JCCS", "--help")
+    out, err, code = Get.Redirect.cmd_all_std(" ./bin/JCCS", "--help")
 
     Assertion.eq(code, 0)
     Assertion.eq(err, "")
@@ -43,7 +43,7 @@ def JT_help():
 # SHORT HELP (-h)
 # =========================================================
 def JT_short_help():
-    out, err, code = Get.Redirect.cmd_all_std("JCCS", "-h")
+    out, err, code = Get.Redirect.cmd_all_std(" ./bin/JCCS", "-h")
 
     Assertion.eq(code, 0)
     Assertion.eq(err, "")
@@ -54,8 +54,8 @@ def JT_short_help():
 # ARGUMENTS DISPLAY (-a / --show-arguments)
 # =========================================================
 def JT_arguments():
-    out_s, err_s, code_s = Get.Redirect.cmd_all_std("JCCS", "-a")
-    out_l, err_l, code_l = Get.Redirect.cmd_all_std("JCCS", "--show-arguments")
+    out_s, err_s, code_s = Get.Redirect.cmd_all_std(" ./bin/JCCS", "-a")
+    out_l, err_l, code_l = Get.Redirect.cmd_all_std(" ./bin/JCCS", "--show-arguments")
 
     Assertion.eq(out_s, out_l)
     Assertion.eq(err_s, err_l)
@@ -69,7 +69,7 @@ def JT_arguments():
 # UPDATE FLAG (--update)
 # =========================================================
 def JT_update():
-    out, err, code = Get.Redirect.cmd_all_std("JCCS", "--update")
+    out, err, code = Get.Redirect.cmd_all_std(" ./bin/JCCS", "--update")
 
     Assertion.eq(code, 0)
     Assertion.eq(err, "")
@@ -87,8 +87,8 @@ def JT_builtin_consistency():
     ]
 
     for short, long in flags:
-        out_s, err_s, code_s = Get.Redirect.cmd_all_std("JCCS", short)
-        out_l, err_l, code_l = Get.Redirect.cmd_all_std("JCCS", long)
+        out_s, err_s, code_s = Get.Redirect.cmd_all_std(" ./bin/JCCS", short)
+        out_l, err_l, code_l = Get.Redirect.cmd_all_std(" ./bin/JCCS", long)
 
         Assertion.eq(out_s, out_l)
         Assertion.eq(err_s, err_l)

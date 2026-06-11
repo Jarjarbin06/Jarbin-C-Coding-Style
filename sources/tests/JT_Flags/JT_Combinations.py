@@ -13,7 +13,7 @@ from jarbin_toolkit_jartest import JarTest, Get, Assertion
 # =========================================================
 def JT_root_exclude():
     out, err, code = Get.Redirect.cmd_all_std(
-        "JCCS",
+        " ./bin/JCCS",
         "--root", ".",
         "--exclude", "test_file.py"
     )
@@ -24,7 +24,7 @@ def JT_root_exclude():
 
 def JT_root_exclude_multi():
     out, err, code = Get.Redirect.cmd_all_std(
-        "JCCS",
+        " ./bin/JCCS",
         "-r", ".",
         "-e", "a.py",
         "-e", "b.py"
@@ -36,7 +36,7 @@ def JT_root_exclude_multi():
 
 def JT_rule_exclude():
     out, err, code = Get.Redirect.cmd_all_std(
-        "JCCS",
+        " ./bin/JCCS",
         "--rule", "O", "O2",
         "--exclude", "a.py"
     )
@@ -47,7 +47,7 @@ def JT_rule_exclude():
 
 def JT_rule_multi_exclude():
     out, err, code = Get.Redirect.cmd_all_std(
-        "JCCS",
+        " ./bin/JCCS",
         "-R", "O", "O2", "G", "G1",
         "-e", "a.py"
     )
@@ -58,7 +58,7 @@ def JT_rule_multi_exclude():
 
 def JT_set_rule():
     out, err, code = Get.Redirect.cmd_all_std(
-        "JCCS",
+        " ./bin/JCCS",
         "--set", "O", "O1" ,"UNAUTHORIZED_EXTENSIONS", "c h",
         "--rule", "G", "G1"
     )
@@ -69,7 +69,7 @@ def JT_set_rule():
 
 def JT_set_multi_rule():
     out, err, code = Get.Redirect.cmd_all_std(
-        "JCCS",
+        " ./bin/JCCS",
         "-S", "O", "O1" ,"UNAUTHORIZED_EXTENSIONS", "c h",
         "-S", "O", "O1" ,"EXCLUDED_FOLDERS", "",
         "-R", "O", "O2"
@@ -81,7 +81,7 @@ def JT_set_multi_rule():
 
 def JT_verbose_json():
     out, err, code = Get.Redirect.cmd_all_std(
-        "JCCS",
+        " ./bin/JCCS",
         "--verbose",
         "--json-log"
     )
@@ -92,7 +92,7 @@ def JT_verbose_json():
 
 def JT_silent_vs_verbose():
     out, err, code = Get.Redirect.cmd_all_std(
-        "JCCS",
+        " ./bin/JCCS",
         "--silent",
         "--verbose"
     )
@@ -103,7 +103,7 @@ def JT_silent_vs_verbose():
 
 def JT_extreme_silent_override():
     out, err, code = Get.Redirect.cmd_all_std(
-        "JCCS",
+        " ./bin/JCCS",
         "--extreme-silent",
         "--verbose"
     )
@@ -114,7 +114,7 @@ def JT_extreme_silent_override():
 
 def JT_help_override():
     out, err, code = Get.Redirect.cmd_all_std(
-        "JCCS",
+        " ./bin/JCCS",
         "--rule", "O", "O2",
         "--help",
         "--exclude", "."
@@ -127,7 +127,7 @@ def JT_help_override():
 
 def JT_version_override():
     out, err, code = Get.Redirect.cmd_all_std(
-        "JCCS",
+        " ./bin/JCCS",
         "--version",
         "--verbose"
     )
@@ -150,7 +150,7 @@ def JT_flag_matrix_basic():
 
     for f1 in flags:
         for f2 in flags:
-            out, err, code = Get.Redirect.cmd_all_std("JCCS", *f1.split(" "), *f2.split(" "))
+            out, err, code = Get.Redirect.cmd_all_std(" ./bin/JCCS", *f1.split(" "), *f2.split(" "))
 
             Assertion.eq(err, "")
             Assertion.neq(out, "")

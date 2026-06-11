@@ -12,15 +12,15 @@ from jarbin_toolkit_jartest import JarTest, Get, Assertion
 # ROOT FLAG (-r / --root)
 # =========================================================
 def JT_root():
-    out, err, code = Get.Redirect.cmd_all_std("JCCS", "--root", ".")
+    out, err, code = Get.Redirect.cmd_all_std(" ./bin/JCCS", "--root", ".")
 
     Assertion.eq(err, "")
     Assertion.neq(out, "")
 
 
 def JT_root_short():
-    out_s, err_s, code_s = Get.Redirect.cmd_all_std("JCCS", "-r", ".")
-    out_l, err_l, code_l = Get.Redirect.cmd_all_std("JCCS", "--root", ".")
+    out_s, err_s, code_s = Get.Redirect.cmd_all_std(" ./bin/JCCS", "-r", ".")
+    out_l, err_l, code_l = Get.Redirect.cmd_all_std(" ./bin/JCCS", "--root", ".")
 
     Assertion.eq(out_s, out_l)
     Assertion.eq(err_s, err_l)
@@ -33,7 +33,7 @@ def JT_root_short():
 # EXCLUDE FLAG (-e / --exclude) (multi)
 # =========================================================
 def JT_exclude_single():
-    out, err, code = Get.Redirect.cmd_all_std("JCCS", "--exclude", "test_file.py")
+    out, err, code = Get.Redirect.cmd_all_std(" ./bin/JCCS", "--exclude", "test_file.py")
 
     Assertion.eq(err, "")
     Assertion.neq(out, "")
@@ -41,7 +41,7 @@ def JT_exclude_single():
 
 def JT_exclude_multi():
     out, err, code = Get.Redirect.cmd_all_std(
-        "JCCS",
+        " ./bin/JCCS",
         "--exclude",
         "a.py",
         "b.py"
@@ -53,10 +53,10 @@ def JT_exclude_multi():
 
 def JT_exclude_consistency():
     out_s, err_s, code_s = Get.Redirect.cmd_all_std(
-        "JCCS", "-e", "a.py", "-e", "b.py"
+        " ./bin/JCCS", "-e", "a.py", "-e", "b.py"
     )
     out_l, err_l, code_l = Get.Redirect.cmd_all_std(
-        "JCCS", "--exclude", "a.py", "b.py"
+        " ./bin/JCCS", "--exclude", "a.py", "b.py"
     )
 
     Assertion.eq(out_s, out_l)
@@ -71,7 +71,7 @@ def JT_exclude_consistency():
 # =========================================================
 # =========================================================
 def JT_rule_single():
-    out, err, code = Get.Redirect.cmd_all_std("JCCS", "--rule", "O", "O2")
+    out, err, code = Get.Redirect.cmd_all_std(" ./bin/JCCS", "--rule", "O", "O2")
 
     Assertion.eq(err, "")
     Assertion.neq(out, "")
@@ -79,7 +79,7 @@ def JT_rule_single():
 
 def JT_rule_multi():
     out, err, code = Get.Redirect.cmd_all_std(
-        "JCCS",
+        " ./bin/JCCS",
         "--rule",
         "O",
         "O2",
@@ -92,8 +92,8 @@ def JT_rule_multi():
 
 
 def JT_rule_consistency():
-    out_s, err_s, code_s = Get.Redirect.cmd_all_std("JCCS", "-R", "O", "O2", "G", "G1")
-    out_l, err_l, code_l = Get.Redirect.cmd_all_std("JCCS", "--rule", "O", "O2", "G", "G1")
+    out_s, err_s, code_s = Get.Redirect.cmd_all_std(" ./bin/JCCS", "-R", "O", "O2", "G", "G1")
+    out_l, err_l, code_l = Get.Redirect.cmd_all_std(" ./bin/JCCS", "--rule", "O", "O2", "G", "G1")
 
     Assertion.eq(out_s, out_l)
     Assertion.eq(err_s, err_l)
@@ -106,7 +106,7 @@ def JT_rule_consistency():
 # SET FLAG (-S / --set) (multi)
 # =========================================================
 def JT_set_single():
-    out, err, code = Get.Redirect.cmd_all_std("JCCS", "--set", "O", "O1" ,"UNAUTHORIZED_EXTENSIONS", "c h")
+    out, err, code = Get.Redirect.cmd_all_std(" ./bin/JCCS", "--set", "O", "O1" ,"UNAUTHORIZED_EXTENSIONS", "c h")
 
     Assertion.eq(err, "")
     Assertion.neq(out, "")
@@ -114,7 +114,7 @@ def JT_set_single():
 
 def JT_set_multi():
     out, err, code = Get.Redirect.cmd_all_std(
-        "JCCS",
+        " ./bin/JCCS",
         "--set", "O", "O1" ,"UNAUTHORIZED_EXTENSIONS", "c h",
         "--set", "O", "O1" ,"EXCLUDED_FOLDERS", ""
     )
@@ -125,10 +125,10 @@ def JT_set_multi():
 
 def JT_set_consistency():
     out_s, err_s, code_s = Get.Redirect.cmd_all_std(
-        "JCCS", "-S", "O", "O1" ,"UNAUTHORIZED_EXTENSIONS", "c h"
+        " ./bin/JCCS", "-S", "O", "O1" ,"UNAUTHORIZED_EXTENSIONS", "c h"
     )
     out_l, err_l, code_l = Get.Redirect.cmd_all_std(
-        "JCCS", "--set", "O", "O1" ,"UNAUTHORIZED_EXTENSIONS", "c h"
+        " ./bin/JCCS", "--set", "O", "O1" ,"UNAUTHORIZED_EXTENSIONS", "c h"
     )
 
     Assertion.eq(out_s, out_l)
