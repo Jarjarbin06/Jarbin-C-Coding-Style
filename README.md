@@ -127,8 +127,8 @@ JCCS is based on a **modular rule execution system**:
 * Each rule is **independent and deterministic**
 * Rules receive:
 
-  * file paths
-  * runtime arguments
+    * file paths
+    * runtime arguments
 
 ---
 
@@ -142,8 +142,8 @@ check(paths: list[str], kwargs: dict) -> list[RuleError] | None
 * `kwargs` → runtime configuration
 * returns:
 
-  * `None` or empty → OK
-  * list of errors → KO
+    * `None` or empty → OK
+    * list of errors → KO
 
 ---
 
@@ -312,21 +312,21 @@ Each rule contains:
 
 1. Create:
 
-```
-sources/rules/<CATEGORY>/<RULE>.py
-```
+    ```
+    sources/rules/<CATEGORY>/<RULE>.py
+    ```
 
 2. Implement:
 
-* rule name
-* `check()` function
-* optional arguments
+    * rule name
+    * `check()` function
+    * optional arguments
 
 3. Register in:
 
-```
-sources/rules/Rules.py
-```
+    ```
+    sources/rules/Rules.py
+    ```
 
 ---
 
