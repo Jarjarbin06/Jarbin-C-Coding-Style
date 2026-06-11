@@ -98,14 +98,14 @@ def show_arguments(manager: RuleManager) -> None:
                         desc = arg_value[1]
 
                     print(
-                        f"  - {arg_name.removeprefix("VAR_")} : \"{value}\"",
+                        f"  - {arg_name.removeprefix('VAR_')} : \"{value}\"",
                         end=""
                     )
 
                     if desc:
-                        print(f"\n    {Text(f"[ {desc} ]").italic().dim()}")
+                        print(f"\n    {Text(f'[ {desc} ]').italic().dim()}")
                     else:
-                        print(f"\n    {Text("[ No description ]").italic().dim()}")
+                        print(f"\n    {Text('[ No description ]').italic().dim()}")
 
             if rule is not last_rule:
                 print("─" * 60)
