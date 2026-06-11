@@ -69,11 +69,12 @@ def error(
     exit(EXIT_FAILURE)
 
 def log_exit(
-        ctx: Context
+        ctx: Context,
+        exit_code: int | None = None
     ) -> None:
     ctx.log.log("INFO", "JCCS", "exiting JCCS")
     ctx.log.close()
-    exit(EXIT_SUCCESS)
+    exit(exit_code or EXIT_SUCCESS)
 
 def parse_args(
     argv,
@@ -247,8 +248,8 @@ def parse_args(
         if flag.handler == "test":
             ctx.log.log("VALID", "Flag", "--test called")
             from tests.JT_main import JTT
-            JTT.run(n = 2)
-            log_exit(ctx)
+            exit_code = JTT.run(n = 2)
+            log_exit(ctx, exit_code=exit_code)
 
         # value parsing
         values = []
