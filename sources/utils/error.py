@@ -7,11 +7,11 @@
 #############################
 
 from jarbin_toolkit_console.ANSI import Color
-from jarbin_toolkit_error import Error
+from jarbin_toolkit_error import BaseError
 
 from program.helper import get_color
 
-class RuleError(Error):
+class RuleError(BaseError):
     """
         RuleError class.
 
